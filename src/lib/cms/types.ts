@@ -224,7 +224,8 @@ export type Story = {
   date: string; // YYYY.MM.DD
   image: string;
   excerpt: string;
-  body: string[];
+  /** 마크다운 본문 */
+  body: string;
   featured?: boolean;
 };
 
@@ -232,6 +233,7 @@ export type StoryContent = {
   meta: Meta;
   header: PageHeaderContent;
   categories: string[];
+  /** `content/story/*.md` 에서 빌드 시 채워집니다. */
   items: Story[];
 };
 

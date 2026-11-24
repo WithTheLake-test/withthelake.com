@@ -23,17 +23,27 @@ npm start        # out/ 을 Cloudflare Pages 로컬 에뮬레이터로 확인 (h
 
 `/about` 같은 기존 URL은 `out/about.html`로 생성되며 Cloudflare Pages에서 슬래시 없는 주소 그대로 제공됩니다. 수정 후 동봉 미리보기(`preview/`)를 갱신하려면 `npm run build:preview`를 실행합니다. 의존성은 공개 원본 저장소의 잠금 파일에 맞춰 두었습니다. 복원 당시의 검증 범위는 [복원 기록](docs/recovery.md)에 있습니다.
 
-콘텐츠는 JSON 파일을 수정한 뒤 다시 빌드하면 반영됩니다.
+콘텐츠는 JSON·마크다운 파일을 수정한 뒤 다시 빌드하면 반영됩니다. 게시물과 성과는 아래 관리자 화면에서도 수정할 수 있습니다.
 
 | 수정할 항목 | 위치 |
 | --- | --- |
-| 사이트 문구·대표 연락처·메뉴에 쓰이는 외부 주소·성과·스토리·상품 | `content/site-content.json` |
+| 사이트 문구·대표 연락처·메뉴에 쓰이는 외부 주소·성과·스토리 카테고리·상품 | `content/site-content.json` |
+| STORY 게시물 (글 하나당 마크다운 파일 하나) | `content/story/*.md` |
 | 제품 가이드 사진·사용법·주의사항 | `content/product-guide.json` |
 | 페이지·공통 레이아웃·반응형 스타일·모션 | `src/app/`, `src/components/` |
 | 사진·로고·업로드 이미지 | `public/assets/`, `public/uploads/` |
 | 직접 호스팅하는 글꼴·라이선스 | `public/fonts/` |
 | 콘텐츠 기본값과 타입 | `src/lib/cms/defaults.ts`, `src/lib/cms/types.ts` |
 | 공유 카드 이미지와 기존 제작 코드 | `src/app/opengraph-image.png`, `scripts/artwork/opengraph-image.tsx` |
+
+## 관리자 (로컬 전용)
+
+게시물(STORY·BLOG)과 성과(IMPACT)를 화면에서 수정합니다. 저장하면 변경 내용이 지정한 브랜치에 커밋되고, Cloudflare Pages가 그 커밋을 자동으로 빌드합니다. 관리자 암호가 붙기 전까지는 운영 배포에 포함되지 않습니다. 관리자 페이지는 `ADMIN_ENABLED=true`로 빌드할 때만 생성되고, 관리자 API는 `ADMIN_ENABLED=true` 환경에서만 응답합니다.
+
+1. 프로젝트 루트에 `.dev.vars` 파일을 만들고 [.env.example](.env.example)의 관리자 항목을 채웁니다. GitHub 토큰은 이 저장소에만 Contents 읽기·쓰기, Commit statuses 읽기 권한을 준 Fine-grained token을 사용합니다.
+2. `npm run admin`을 실행한 뒤 http://localhost:8788/admin 을 엽니다.
+
+관리자에서 저장한 내용은 저장소에 커밋되므로, 코드 작업을 시작하기 전에 `git pull`로 최신 내용을 받습니다. 관리자를 실행한 뒤 공개 사이트만 다시 빌드하려면 `npm run build`를 실행합니다.
 
 ## 문의 접수
 
