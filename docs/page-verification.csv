@@ -1,0 +1,23 @@
+route,normalized_main_text,headings,element_tree_and_classes,matched_element_count,comparison
+/,match,match,match,412,운영 본문과 빌드 결과 대조
+/contact,match,match,match,88,서버 응답으로 스트리밍되는 폼을 포함하여 대조.
+/about,match,match,match,143,운영 본문과 빌드 결과 대조
+/what-we-do,match,match,match,109,운영 본문과 빌드 결과 대조
+/senio,match,match,match,268,운영 본문과 빌드 결과 대조
+/what-we-do/with-well-me,match,match,match,125,운영 본문과 빌드 결과 대조
+/what-we-do/community-health,match,match,match,145,운영 본문과 빌드 결과 대조
+/healing,match,match,match,84,운영 본문과 빌드 결과 대조
+/info,match,match,match,181,운영 본문과 빌드 결과 대조
+/impact,match,match,match,289,운영 본문과 빌드 결과 대조
+/story,match,match,match,18,목록 초기 렌더 상태 대조. 이후 표시되는 8개 글 및 카테고리 3종 별도 검증.
+/store,match,match,match,105,운영 본문과 빌드 결과 대조
+/store/guide,match,match,match,149,운영 본문과 빌드 결과 대조
+/privacy,match,match,match,49,운영 본문과 빌드 결과 대조
+/story/mgmmm-school,match,match,match,46,운영 본문과 빌드 결과 대조
+/story/senio-patent-filed,match,match,match,68,운영 본문과 빌드 결과 대조
+/story/barefoot-leader-course,match,match,match,46,운영 본문과 빌드 결과 대조
+/story/chuncheon-future-mou,match,match,match,67,운영 본문과 빌드 결과 대조
+/story/why-barefoot-walking,match,match,match,45,운영 본문과 빌드 결과 대조
+/story/daily-walking-habit,match,match,match,45,운영 본문과 빌드 결과 대조
+/story/wellness-lecture,match,match,match,66,운영 본문과 빌드 결과 대조
+/story/governance-meeting,match,match,match,63,운영 본문과 빌드 결과 대조

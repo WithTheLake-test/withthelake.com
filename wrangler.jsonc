@@ -1,0 +1,9 @@
+// Cloudflare Pages 설정 (정적 export 결과물 out/ + functions/ 의 Pages Functions)
+// 빌드: npm run build  →  out/      로컬 확인: npm start (wrangler pages dev)
+// 문의 API 비밀값(RESEND_API_KEY 등)은 이 파일에 넣지 말고 Pages 대시보드의 Variables and Secrets 또는 .dev.vars 에 둡니다.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "withthelake-recovered",
+  "pages_build_output_dir": "out",
+  "compatibility_date": "2025-09-01"
+}
