@@ -519,15 +519,15 @@ export const DEFAULT_CONTENT: SiteContent = {
 
   story: {
     meta: {
-      title: "STORY — 맨발걷기 정보 · 힐링로드ON · NEWS",
-      description: "현장에서 만드는 건강한 변화. 맨발걷기 정보, 힐링로드ON, NEWS를 한 곳에서 만나보세요.",
+      title: "STORY — 맨발걷기 정보 · 힐링로드ON · NEWS · CONTENTS",
+      description: "현장에서 만드는 건강한 변화. 맨발걷기 정보, 힐링로드ON, NEWS, 건강 콘텐츠를 한 곳에서 만나보세요.",
     },
     header: {
       eyebrow: "Story",
       title: "스토리",
-      lead: "현장에서 만드는 건강한 변화. 맨발걷기 정보, 힐링로드ON 프로그램 소식, 회사 NEWS를 카테고리로 나누어 전합니다.",
+      lead: "현장에서 만드는 건강한 변화. 맨발걷기 정보, 힐링로드ON 프로그램 소식, 회사 NEWS, 건강 CONTENTS를 카테고리로 나누어 전합니다.",
     },
-    categories: ["맨발걷기 정보", "힐링로드ON", "NEWS"],
+    categories: ["맨발걷기 정보", "힐링로드ON", "NEWS", "CONTENTS"],
     items: [
       {
         slug: "mgmmm-school",

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
 import StoryCard from "@/components/story/StoryCard";
+import StoryBody from "@/components/story/StoryBody";
 import { IconArrow } from "@/components/Icons";
 import { getContent } from "@/lib/cms/store";
 import { getStory } from "@/lib/cms/helpers";
@@ -70,11 +71,7 @@ export default async function StoryDetailPage({ params }: PageProps<"/story/[slu
           )}
           <div className="mx-auto mt-12 max-w-[68ch] space-y-6">
             <p className="t-lead font-medium text-ink">{story.excerpt}</p>
-            {story.body.map((p, i) => (
-              <p key={i} className="t-body-lg whitespace-pre-line text-ink-2">
-                {p}
-              </p>
-            ))}
+            <StoryBody body={story.body} />
           </div>
 
           <nav aria-label="이전/다음 글" className="mt-16 grid gap-3 border-t border-line pt-8 sm:grid-cols-2">
