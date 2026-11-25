@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #f9fafb;
+  --color-soft: #f3f4f6;
+  --color-line: #e5e7eb;
+  --color-faint: #9ca3af;
+  --color-muted: #6b7280;
+  --color-ink: #111827;
+  --color-accent: #410099;
+  --color-danger: #dc2626;
+
+  --text-body: 14.5px;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: var(--text-body);
+}
