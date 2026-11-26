@@ -252,14 +252,34 @@ type AppData = { members: Member[]; tasks: Task[]; publishes: PublishItem[]; eve
 
 ## 8. 배포
 
+- 배포 주소
+  - 홈페이지: https://withthelake-test.pages.dev (백오피스가 사진을 불러오고 '홈페이지 열기'로 여는 주소, `backoffice/src/lib/links.ts`의 `HOMEPAGE_URL`)
+  - 백오피스: https://withthelake-backoffice.pages.dev
 - Cloudflare Pages 프로젝트 `withthelake-backoffice`가 `main` 브랜치로 연결되어 있습니다.
   - 루트 디렉터리: `backoffice`
   - 빌드 명령: `npm run build`
   - 출력: `out`
   - 설정 파일: `backoffice/wrangler.jsonc`
 - main에 합치면 자동으로 다시 배포됩니다.
+- 백오피스 프로젝트의 빌드 감시 경로(포함)는 아래 4개입니다. 백오피스는 빌드할 때 `backoffice/scripts/sync-site.mjs`로 홈페이지 파일을 복사해 쓰므로, 이 파일들만 바뀌어도 다시 빌드해야 합니다.
+  - `backoffice/**`
+  - `content/site-content.json` (글·성과 데이터)
+  - `src/lib/story-body.ts` (본문 표시 규칙, 미리보기와 공유)
+  - `src/lib/cms/types.ts` (홈페이지 데이터 형식)
+- 복사 대상 파일을 늘리거나 줄이면 위 목록과 `sync-site.mjs`를 함께 고칩니다.
 - 기존 홈페이지 프로젝트의 빌드 감시 경로에서 `backoffice/**`를 제외합니다.
-- 실명이 들어간 화면이므로 Cloudflare Access(이메일 일회용 코드)로 접근을 제한합니다.
+- 홈페이지 `/admin` 이동: `public/_redirects`가 `/admin`과 `/admin/*`를 백오피스로 302 이동시킵니다. `/admin/` 뒤 경로와 쿼리는 그대로 넘어갑니다. (예: `/admin/site/posts` → 백오피스 `/site/posts`)
+- 주소가 바뀔 때 고칠 곳
+  - 백오피스 주소(예: `admin.withthelake.com`): `public/_redirects`의 두 줄, 위 '배포 주소'. `_redirects`는 Cloudflare가 직접 읽는 정적 파일이라 상수를 쓸 수 없으므로 직접 고칩니다. 백오피스 코드에는 자기 주소가 없습니다.
+  - 홈페이지 주소: `backoffice/src/lib/links.ts`의 `HOMEPAGE_URL`, 위 '배포 주소'
+- 접근 암호 (Cloudflare Access 대신 사용)
+  - `backoffice/functions/_middleware.ts`가 화면·저장 API·정적 파일을 포함한 모든 요청을 검사합니다. 통과 표시가 없으면 `/login` 암호 화면으로 보냅니다. (저장 API와 정적 파일은 401)
+  - 암호: Pages 시크릿 `ADMIN_PASSWORD`. **운영(Production)과 미리보기(Preview) 환경 모두**에 넣어야 합니다. 없으면 모든 요청을 막고 '접근 암호가 설정되지 않았습니다'를 보여 줍니다. 로컬은 `backoffice/.dev.vars`.
+  - 통과 쿠키 `bo_session`: HttpOnly, Secure, SameSite=Strict 세션 쿠키. 암호가 아니라 '발급 시각 + 서명'을 담고, 요청마다 다시 발급되어 30분 동안 사용하지 않으면 다시 암호를 묻습니다. 브라우저를 닫아도 사라집니다.
+  - 암호를 바꾸면 들어와 있던 사람도 모두 다시 암호를 입력해야 합니다.
+  - 틀리면 1.5초 늦게 응답하고, 5번 틀리면 1분 동안 입력을 받지 않습니다(남은 초 표시).
+  - SameSite=Strict라서 홈페이지 `/admin`이나 외부 링크로 들어올 때마다 암호를 묻습니다.
+  - 구현: `backoffice/src/server/auth.ts`(쿠키 서명·확인), `login-page.ts`(암호 화면)
 
 ---
 
@@ -357,7 +377,17 @@ type AppData = { members: Member[]; tasks: Task[]; publishes: PublishItem[]; eve
 - 시크릿: `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`. Pages 시크릿과 `backoffice/.dev.vars`에 둡니다.
   - 토큰은 이 저장소만 대상으로 하는 Fine-grained 토큰입니다.
   - 권한: Contents 읽기·쓰기, Commit statuses 읽기
-- **접근 제한 필수**: 홈페이지를 바꾸는 기능이므로, 저장 기능을 켜기 전에 Cloudflare Access를 반드시 설정합니다.
+- **접근 제한 필수**: 홈페이지를 바꾸는 기능이므로 접근 암호(8번)로 백오피스 전체를 보호합니다. `ADMIN_PASSWORD`를 넣기 전에는 백오피스가 열리지 않습니다.
+- 구현 위치
+  - 저장 API: `backoffice/functions/api/site/` (`content`, `post`, `impact`, `asset`, `deploy-status`, `_middleware`)
+  - GitHub 연동과 재시도: `backoffice/src/server/`
+  - 끼워 넣기·저장 전 검사(화면과 서버가 함께 사용): `backoffice/src/lib/site/merge.ts`, `validate.ts`
+- 새 글은 자동 발행 스킬만 올립니다. 백오피스는 기존 글 수정·삭제와 성과 저장만 합니다. 글의 날짜를 바꿔도 `story.items` 안의 위치는 바뀌지 않습니다.
+- 토큰 권한에 Checks 읽기가 있어야 상단 '홈페이지 반영 상태'가 보입니다. (홈페이지 빌드 기록 `Cloudflare Pages: withthelake-test`를 읽음)
+- 로컬에서 저장까지 확인하는 방법 (`npm run dev`는 저장 API가 없어 빌드 시점 내용만 보여 주고 저장을 막습니다)
+  1. `backoffice/.dev.vars`에 `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH=save-test`
+  2. `cd backoffice && npm run build && ../node_modules/.bin/wrangler pages dev out --port 8788`
+  3. http://localhost:8788/site/posts 에서 저장
 
 ### 11-6. 진행 순서
 
