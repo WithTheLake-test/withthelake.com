@@ -5,6 +5,7 @@ import { ToastProvider } from "@/components/Toast";
 import { getMembers } from "@/lib/data";
 import { StoreProvider, StoreReady } from "@/lib/store";
 import { UserProvider } from "@/lib/user";
+import { WorkFeedProvider } from "@/lib/work/feed";
 
 export const metadata: Metadata = {
   title: { default: "위드더레이크 업무 관리", template: "%s | 위드더레이크 업무 관리" },
@@ -23,11 +24,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <UserProvider members={members}>
           <StoreProvider>
-            <ToastProvider>
-              <AppShell>
-                <StoreReady>{children}</StoreReady>
-              </AppShell>
-            </ToastProvider>
+            <WorkFeedProvider>
+              <ToastProvider>
+                <AppShell>
+                  <StoreReady>{children}</StoreReady>
+                </AppShell>
+              </ToastProvider>
+            </WorkFeedProvider>
           </StoreProvider>
         </UserProvider>
       </body>

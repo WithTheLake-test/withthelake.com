@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>위드더레이크 백오피스 · 홈·캘린더 시안</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#F6F6F3;--card:#fff;--line:#E7E6E1;--line2:#EFEEEA;--ink:#1C1C1A;--ink2:#3F3E3A;--mute:#6B6A65;--mute2:#57534E;
+--red:#B42318;--redbg:#FEF3F2;--redbd:#FECDCA;--redchip:#FEE4E2;--org:#9A3412;--orgbg:#FFF7ED;--orgchip:#FFEDD5;--orgbd:#FED7AA;
+--grn:#166534;--grnbg:#F0FDF4;--grnchip:#DCFCE7;--blu:#1E3A8A;--bluchip:#DBEAFE;--pur:#5B21B6;--purchip:#EDE9FE;--memo:#FFFBEB;--memobd:#F5D77B}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,sans-serif;font-size:14px}
+a{color:#1D4ED8}a:hover{color:#1E3A8A}
+button,input,select{font:inherit}
+.app{display:flex;flex-wrap:wrap;min-height:100vh}
+nav.side{flex:1 1 200px;max-width:240px;background:#fff;border-right:1px solid var(--line);padding:24px 14px;display:flex;flex-direction:column;gap:4px}
+@media (max-width:820px){nav.side{max-width:none}}
+.brand{padding:0 10px 18px;font-weight:700;letter-spacing:.04em;font-size:15px}
+.nav-btn{display:block;width:100%;text-align:left;border:0;background:transparent;padding:11px 12px;border-radius:10px;font-size:15px;color:var(--ink2);cursor:pointer}
+.nav-btn:hover{background:#F5F5F3}
+.nav-btn.on{background:var(--ink);color:#fff;font-weight:500}
+.nav-sub{font-size:14px;color:var(--mute2)}
+.nav-label{margin:14px 12px 2px;font-size:12px;font-weight:700;color:var(--mute)}
+.main-wrap{flex:999 1 560px;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(246,246,243,.95);backdrop-filter:blur(4px);border-bottom:1px solid var(--line);padding:12px 32px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.topbar .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--mute)}
+.topbar label{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--ink2)}
+.topbar select{min-height:38px;border:1px solid #D6D4CE;border-radius:9px;padding:0 8px;background:#fff}
+.memo-toggle{min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--memobd);background:var(--memo);color:#713F12;font-weight:700;cursor:pointer}
+.memo-toggle[aria-pressed=true]{background:#713F12;color:#fff;border-color:#713F12}
+main{padding:28px 32px 80px;max-width:1220px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+h1{margin:0;font-size:27px}
+.sub{margin:4px 0 0;color:var(--mute);font-size:15px}
+.sec{display:flex;flex-direction:column;gap:12px;position:relative}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec-h h2{margin:0;font-size:13px;font-weight:700;color:var(--mute);letter-spacing:.02em}
+.sec-h .hint{font-size:13px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px}
+.grid{display:grid;gap:14px;align-items:start}
+.g4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.kpi{display:flex;flex-direction:column;gap:6px;padding:18px 20px;border-radius:16px;background:#fff;border:1px solid var(--line);cursor:pointer;text-align:left;color:inherit}
+.kpi:hover{border-color:#C9C7C0}
+.kpi .l{font-size:14px;font-weight:500}.kpi .n{font-size:42px;font-weight:700;line-height:1.1}.kpi .s{font-size:13px;color:var(--mute)}
+.kpi.alert{background:var(--redbg);border-color:var(--redbd)}.kpi.alert .n{color:var(--red)}.kpi.alert .s{color:#7A271A}
+h3{margin:0;font-size:16px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.muted{color:var(--mute)}.small{font-size:12px}.s13{font-size:13px}
+.chip{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap}
+.c-red{background:var(--red);color:#fff;font-weight:700}.c-redl{background:var(--redchip);color:var(--red);font-weight:700}
+.c-org{background:var(--orgchip);color:var(--org)}.c-orgs{background:#C2410C;color:#fff;font-weight:700}
+.c-gray{background:#EFEEEA;color:var(--ink2)}.c-grn{background:var(--grnchip);color:#14532D}.c-blu{background:var(--bluchip);color:var(--blu)}
+.c-yel{background:#FEF3C7;color:#92400E}.c-pur{background:var(--purchip);color:var(--pur)}
+.bar{flex:1;height:8px;border-radius:999px;background:#EFEEEA;overflow:hidden}.bar>i{display:block;height:100%;background:var(--ink)}
+.item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;background:#FAFAF8}
+.item.red{background:var(--redbg)}
+.av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:none}
+.av-m{background:#FEE2E2;color:#7F1D1D}.av-j{background:#DBEAFE;color:#1E3A8A}.av-k{background:#DCFCE7;color:#14532D}
+.pillbar{display:flex;flex-wrap:wrap;gap:8px}
+.pill{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #D6D4CE;background:#fff;color:var(--ink2);font-size:13px;cursor:pointer}
+.pill[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.pill.src[aria-pressed=false]{opacity:.45;text-decoration:line-through}
+.btn{min-height:42px;padding:0 16px;border-radius:10px;border:1px solid #D6D4CE;background:#fff;cursor:pointer;font-size:14px}
+.btn.pri{background:var(--ink);color:#fff;border-color:var(--ink);font-weight:700}
+.empty{padding:16px;border:1px dashed #C9C7C0;border-radius:12px;color:var(--mute2);font-size:13px;line-height:1.6}
+.ex{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;background:#F0EFEB;color:var(--mute2);font-size:11px;font-weight:500;vertical-align:2px}
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;min-width:760px}
+.cal .dow{font-size:12px;font-weight:700;color:var(--mute);padding:2px 6px}
+.day{min-height:170px;border-radius:10px;background:#FAFAF8;padding:7px;display:flex;flex-direction:column;gap:5px}
+.day.today{background:#fff;outline:2px solid var(--ink)}
+.day.crunch{background:var(--redbg);outline:1px solid var(--redbd)}
+.day .dn{font-size:13px;font-weight:700;display:flex;justify-content:space-between}
+.ev{padding:4px 6px;border-radius:6px;font-size:12px;line-height:1.35}
+.ev.g-company{background:var(--bluchip);color:var(--blu)}.ev.g-ceo{background:var(--orgchip);color:var(--org)}
+.ev.g-leave{background:#E7E6E1;color:var(--ink2);font-weight:500}.ev.g-task{border:1px solid #D6D4CE;background:#fff}
+.ev.g-task.over{background:var(--redchip);border-color:var(--redchip);color:var(--red)}.ev.g-content{background:var(--purchip);color:var(--pur)}
+.ev.done{color:var(--mute);text-decoration:line-through;background:transparent;border-color:transparent}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mute2)}
+/* timeline */
+.tl{position:relative;min-width:760px;height:200px;margin:0 16px}
+.tl .axis{position:absolute;top:30px;left:0;right:0;height:2px;background:var(--line)}
+.tl .tick{position:absolute;top:0;font-size:12px;color:var(--mute);transform:translateX(-50%)}
+.tl .dot{position:absolute;top:24px;width:14px;height:14px;border-radius:50%;border:2px solid #fff;transform:translateX(-50%)}
+.tl .lab{position:absolute;width:205px;padding:9px 11px;border-radius:12px;display:flex;flex-direction:column;gap:2px;font-size:12px}
+/* kanban */
+.col{background:#EFEEEA;border-radius:14px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.col h3{font-size:14px;padding:4px}
+.kcard{background:#fff;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;border:1px solid transparent}
+.proj{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;cursor:pointer;text-align:left;color:inherit;width:100%}
+.proj:hover{border-color:#C9C7C0}
+.sublist{display:flex;flex-direction:column;gap:6px;padding-top:10px;border-top:1px solid var(--line2)}
+table{border-collapse:collapse;width:100%}th,td{padding:11px 8px;border-bottom:1px solid var(--line2);text-align:left;font-size:14px}th{font-size:12px;color:var(--mute2)}
+.mail{display:flex;flex-direction:column;gap:4px;padding:15px 17px;border:0;border-bottom:1px solid var(--line2);background:#fff;text-align:left;cursor:pointer;width:100%;color:inherit}
+.mail.on{background:#F5F5F3}
+input[type=text],input[type=date],input[type=number],select.f{min-height:44px;padding:0 12px;border:1px solid #D6D4CE;border-radius:10px;background:#fff;font-size:14px;width:100%}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--ink2)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:30}
+.toast.show{opacity:1}
+/* memo */
+.memo{position:fixed;top:0;right:0;bottom:0;width:min(420px,92vw);background:var(--memo);border-left:1px solid var(--memobd);box-shadow:-8px 0 24px rgba(0,0,0,.06);z-index:20;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .2s}
+.memo.open{transform:none}
+.memo header{padding:18px 20px;border-bottom:1px solid var(--memobd);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.memo header h2{margin:0;font-size:17px;color:#713F12}
+.memo .body{overflow:auto;padding:14px 16px 40px;display:flex;flex-direction:column;gap:10px}
+.mnote{background:#fff;border:1px solid #F3E3B0;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.65;cursor:pointer}
+.mnote.hl{outline:2px solid #B45309}
+.mnote b.t{display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:4px}
+.mnote code{background:#FEF3C7;padding:0 4px;border-radius:4px;font-size:12px}
+.mnote ul{margin:4px 0 0;padding-left:18px}
+.pin{display:none;width:22px;height:22px;border-radius:50%;background:#B45309;color:#fff;font-size:12px;font-weight:700;align-items:center;justify-content:center;border:0;cursor:pointer;flex:none}
+body.memo-on .pin{display:inline-flex}
+@media (min-width:1280px){body.memo-on .main-wrap{margin-right:420px}}
+.flash{animation:fl 1.2s}
+@keyframes fl{0%{box-shadow:0 0 0 4px #F59E0B}100%{box-shadow:0 0 0 0 transparent}}
+.scrollx{overflow-x:auto}
+.vis-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="app">
+<nav class="side" aria-label="주 메뉴">
+<div class="brand">WITH THE LAKE</div>
+<button class="nav-btn" data-go="home">홈</button>
+<button class="nav-btn" data-go="calendar">캘린더</button>
+<p class="nav-label" style="margin-top:22px;font-weight:500;line-height:1.6">시안 기준일 2026-11-26(목)<br>업무·콘텐츠·영업 = 노션 실제 데이터<br>[대괄호] = 아직 데이터 없음</p>
+</nav>
+<div class="main-wrap">
+<div class="topbar">
+<div class="left">
+<label>보는 사람
+<select id="role">
+<option value="정미경">정미경 (대표 · 관리자)</option>
+<option value="김민주">김민주 (PM · 관리자)</option>
+<option value="김진">김진</option>
+</select></label>
+<span>노션·구글 캘린더 오전 10:33 동기화</span>
+</div>
+<button class="memo-toggle" id="memoBtn" aria-pressed="false" aria-controls="memo">개발 메모 열기</button>
+</div>
+<main id="view" tabindex="-1"></main>
+</div>
+</div>
+
+<aside class="memo" id="memo" aria-label="개발 메모">
+<header><div><h2 id="memoTitle">개발 메모</h2><p class="small" style="margin:4px 0 0;color:#713F12">화면의 주황 번호를 누르면 해당 메모로, 메모를 누르면 화면 위치로 이동해요</p></div>
+<button class="btn" id="memoClose" aria-label="개발 메모 닫기">닫기</button></header>
+<div class="body" id="memoBody"></div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ========= 기준 데이터 (2026-11-26 노션·구글 캘린더 조회값) ========= */
+const TODAY = '2026-11-26';
+const N = 'https://app.notion.com/p/';
+const PEOPLE = ['정미경','김민주','김진'];
+const AV = {정미경:['미','av-m'],김민주:['민','av-j'],김진:['진','av-k']};
+const ADMINS = ['정미경','김민주'];
+
+const PROJECTS = [
+ {k:'ir',name:'강원초기창업 (심바벤처스 IR)',cat:'정부지원과제',who:['정미경'],end:'2026-11-26',st:'진행중',url:N+'422414e36631811fb7b6cfb08ad7b3c1',imp:true},
+ {k:'ai',name:'[강원창경] 지역주도 AI 대전환',cat:'정부지원과제',who:['김민주','김진'],end:'2026-11-30',st:'진행중',url:N+'422414e36631813f9c1eef38ecbde34b'},
+ {k:'hrd',name:'산업인력공단 AI 교육',cat:'정부지원과제',who:['김민주','김진'],end:'2026-11-30',st:'진행중',url:N+'422414e3663181aaa257c1f75cadb94b',imp:true},
+ {k:'sodam',name:'소담스퀘어 영상 콘텐츠',cat:'정부지원과제',who:['김민주'],end:'2026-11-30',st:'진행중',url:N+'422414e3663181fca1eedad961ddfbf5'},
+ {k:'intern',name:'강원 온라인마케터 인턴',cat:'정부지원과제',who:['정미경'],end:'2026-11-30',st:'진행중',url:N+'422414e3663181f4b9dcf78409fad7f6'},
+ {k:'mg',name:'MG 함께자람 몸·맘·말 건강학교',cat:'운영',who:['정미경','김민주','김진'],end:'2026-11-30',st:'진행중',url:N+'422414e3663181509b6bcb7131d31350',imp:true},
+ {k:'wwm',name:'위드웰미 스마트스토어 셋팅',cat:'운영',who:['김진'],start:'2026-11-02',end:null,st:'진행중',url:N+'422414e366318148acf6c03ea635a7fd'},
+ {k:'pr',name:'PR 기사·홈페이지 아카이빙',cat:'운영',who:['정미경','김민주'],end:null,st:'진행중',url:N+'422414e36631814cb315c3d8668f53ce'},
+ {k:'walk',name:'춘천 맨발걷기 웰니스 톡방',cat:'운영',who:['정미경','김진'],end:null,st:'진행중',url:N+'422414e36631815a95a8d2c63e87337a'},
+ {k:'senio',name:'세니오 앱 추가개발',cat:'개발',who:['김민주'],end:null,st:'진행중',url:N+'422414e3663181b19c7fc6f16eca7fb5'},
+ {k:'pack',name:'찜질팩 제작',cat:'운영',who:['정미경','김민주'],end:null,st:'진행중',url:N+'422414e3663181d984c1d99e03d6dcad'},
+ {k:'donate',name:'제품 후원 (복지관·경로당)',cat:'운영',who:['정미경'],end:'2026-12-05',st:'진행중',url:N+'422414e3663181d891fec069682f197c',imp:true},
+ {k:'pan',name:'판판대로 (상품 개선 지원)',cat:'정부지원과제',who:['김민주'],end:null,st:'보류'},
+ {k:'fund',name:'오마이컴퍼니·해피빈 펀딩',cat:'정부지원과제',who:['정미경'],end:null,st:'보류'},
+ {k:'expo',name:'2026 강원 시니어산업박람회',cat:'운영',who:['정미경','김진'],end:'2026-11-21',st:'완료'},
+ {k:'slow',name:'슬슬쌀롱 (슬로우조깅)',cat:'운영',who:['정미경','김진'],end:'2026-11-11',st:'완료'}
+];
+const TASKS = [
+ {p:'ir',t:'세니오 시연영상 제출',who:['정미경'],d:'2026-11-26',st:'준비'},
+ {p:'ir',t:'최종 발표',who:['정미경'],d:'2026-11-26',time:'15:30',st:'준비',kind:'행사'},
+ {p:'wwm',t:'발가락 벌리개 케이스 서치 + 시트 가격 기재',who:['김진'],d:null,st:'준비'},
+ {p:'pr',t:'슬슬쌀롱·4주프로그램 기사 기자 컨택',who:['정미경'],d:null,st:'준비'},
+ {p:'pr',t:'SE브릿지 후기 기사 발행',who:['정미경'],d:'2026-11-30',st:'대기(회신)'},
+ {p:'mg',t:'우두중리경로당 현판식 촬영',who:['정미경'],d:'2026-11-20',st:'완료'},
+ {p:'mg',t:'만족도조사 참여 안내 문자 발송',who:['정미경'],d:'2026-11-23',st:'지연'},
+ {p:'mg',t:'결과지 제작·데이터 정리',who:['김민주'],d:'2026-11-24',st:'진행중'},
+ {p:'mg',t:'결과보고서 완성',who:['정미경'],d:'2026-11-24',st:'준비'},
+ {p:'mg',t:'결과 대외 안내',who:['김민주'],d:'2026-11-27',st:'준비'},
+ {p:'mg',t:'출석부 스캔 (증빙)',who:['김진'],d:'2026-11-28',st:'완료',doneAt:'2026-11-24'},
+ {p:'mg',t:'사업보고 제출 (영상·증빙·데이터 원페이지)',who:['정미경'],d:'2026-11-30',st:'준비'},
+ {p:'walk',t:'오픈카톡 주별 메시지 세팅',who:['김진'],d:null,st:'진행중'},
+ {p:'hrd',t:'교육 참석 (24시간)',who:['김민주','김진'],d:'2026-11-23',end:'2026-11-25',st:'진행중',kind:'행사'},
+ {p:'hrd',t:'결과보고 제출',who:['김민주','김진'],d:'2026-11-30',st:'준비'},
+ {p:'senio',t:'추가개발 건 개발자 연락',who:['김민주'],d:null,st:'준비'},
+ {p:'donate',t:'우두중리경로당 후원 일정 협의 (12월 초)',who:['정미경'],d:null,st:'준비'},
+ {p:'donate',t:'복지관 후원 일정 조율',who:['정미경'],d:'2026-11-24',st:'완료',doneAt:'2026-11-24'},
+ {p:'donate',t:'북부노인복지관 후원식',who:['정미경'],d:'2026-11-25',time:'10:30',st:'완료',kind:'행사',doneAt:'2026-11-25'},
+ {p:'pack',t:'시니어클럽 제작의뢰 미팅',who:[],d:'2026-11-25',st:'완료',doneAt:'2026-11-25'},
+ {p:'pack',t:'원물 확정',who:['정미경'],d:'2026-11-28',st:'진행중'},
+ {p:'pack',t:'샘플 제작',who:[],d:'2026-12-07',st:'대기(회신)'},
+ {p:'intern',t:'',who:[],d:null,st:'준비'},
+ {p:'intern',t:'업무 전달 미팅',who:['정미경'],d:'2026-11-25',st:'완료',kind:'행사',doneAt:'2026-11-25'},
+ {p:'sodam',t:'영상 제작일정 확인',who:['김민주'],d:'2026-11-25',st:'준비'},
+ {p:'sodam',t:'제스트 시공 전후 사진 받기',who:['정미경'],d:'2026-11-27',st:'준비'},
+ {p:'sodam',t:'영상 마감',who:['김민주'],d:'2026-11-30',st:'준비'}
+];
+const GCAL = [
+ {src:'leave',t:'김진 연차',who:['김진'],d:'2026-11-25',end:'2026-11-27'},
+ {src:'ceo',t:'문수빈 마케터 미팅',who:['정미경'],d:'2026-11-25',time:'16:00'},
+ {src:'company',t:'[함께자람] 결과지 배포',who:[],d:'2026-11-27'}
+];
+const CONTENTS = [
+ {t:'우두중리경로당 후원',st:'대기',cat:null,d:null},{t:'도화오포드 MOU',st:'작성중',cat:'기사PR',d:null},
+ {t:'시니어박람회 참여',st:'발행대기',cat:'기사PR',d:null},{t:'SE브릿지대회 참여',st:'대기',cat:null,d:null},
+ {t:'(PR)슬슬쌀롱 프로그램',st:'발행대기',cat:'기사PR',d:null},{t:'춘천시 북부노인복지관 후원',st:'대기',cat:null,d:null},
+ {t:'슬슬쌀롱 프로그램',st:'사진수급필요',cat:'홈페이지',d:null},{t:'춘천웰니스 오픈채팅방 점심 정기메시지',st:'작성중',cat:'카톡정기메세지',d:null},
+ {t:'미래동행재단 MOU PR',st:'발행완료',cat:'기사PR',d:'2026-06-30'},{t:'제스트 MOU PR',st:'발행완료',cat:'기사PR',d:'2026-07-01'},
+ {t:'(PR)함께자람 4주 프로그램',st:'발행대기',cat:'기사PR',d:'2026-11-10'},{t:'함께자람 4주 프로그램',st:'작성중',cat:'홈페이지',d:'2026-11-10'}
+];
+const SALES_REAL = []; // 노션 💼 영업활동 DB: 11/26 현재 0건
+const SALES_EX = [
+ {n:'[업체 A]',stage:'제안서 보내야 함',what:'[제안 내용]',next:'제안서 발송',nextD:'2026-11-24',who:'정미경',amt:null},
+ {n:'[업체 B]',stage:'제안서 보내야 함',what:'[제안 내용]',next:'제안서 발송',nextD:'2026-11-29',who:'김민주',amt:null},
+ {n:'[업체 C]',stage:'제안서 보냄',sent:'2026-11-17',next:'회신 확인 전화',nextD:'2026-11-27',who:'정미경',amt:null},
+ {n:'[업체 D]',stage:'제안서 보냄',sent:'2026-11-24',who:'김민주',amt:null},
+ {n:'[업체 E]',stage:'미팅',contact:'[상대 담당자]',next:'견적 전달',nextD:'2026-12-02',who:'정미경',amt:null,last:'2026-10-20'},
+ {n:'[업체 F]',stage:'리드',next:'첫 연락',nextD:null,who:'김진',amt:null}
+];
+let state = {screen:'home',role:'정미경',goals:[
+ {t:'강원초기창업 IR 발표 준비',who:'정미경',done:true},{t:'MG 함께자람 결과보고서 완성',who:'정미경 · 김민주',done:false},{t:'시니어박람회 PR 기사 발행',who:'김민주',done:false}],
+ cal:{company:true,ceo:true,leave:true,task:true,content:true,person:'전체'},
+ prog:{cat:'전체',health:'전체',open:null}, content:{st:null}, salesEx:false,
+ subs:[{n:'Google Workspace',cyc:'매월',d:'[결제일]',amt:'[금액]',card:'법인카드 [끝 4자리]',who:'[담당자]',st:'사용중'}],
+ mails:[
+  {id:1,from:'[보낸 기관]',subj:'[사업 결과보고 양식 안내]',by:'김민주',memo:'30일 사업보고 제출이랑 연결돼요. 양식이 바뀌어서 대표님 확인 필요.',when:'오늘',st:'none',link:'mg'},
+  {id:2,from:'[보낸 기관]',subj:'[협업 제안 회신]',by:'정미경',memo:'',when:'어제',st:'none'},
+  {id:3,from:'[보낸 기관]',subj:'[행사 참가 안내]',by:'김진',memo:'',when:'11월 24일',st:'doing',action:{t:'[참가 신청]',who:'김진',d:'2026-11-25'}}],
+ mailTab:'none', mailSel:1};
+
+/* ========= 계산 ========= */
+const dnum = s => s ? Math.round((new Date(s+'T00:00:00') - new Date(TODAY+'T00:00:00'))/864e5) : null;
+const md = s => { if(!s) return ''; const [y,m,d]=s.split('-'); return (+m)+'월 '+(+d)+'일'; };
+const dd = s => { if(!s) return ''; return (+s.split('-')[2])+'일'; };
+const open = t => !['완료','보류'].includes(t.st);
+const due = t => t.end || t.d;
+const isOver = t => open(t) && due(t) && dnum(due(t)) < 0;
+const proj = k => PROJECTS.find(p=>p.k===k);
+const subs = k => TASKS.filter(t=>t.p===k);
+const mine = (t,who) => t.who.includes(who);
+function health(p){
+ const ss=subs(p.k), over=ss.filter(isOver).length;
+ if(over) return {h:'지연',why:'지난 업무 '+over};
+ if(!p.end && p.start && dnum(p.start)<-21) return {h:'지연',why:'시작 후 '+(-dnum(p.start))+'일째 진전 없음'};
+ if(p.end && dnum(p.end)===0) return {h:'확인 필요',why:'오늘 마감'};
+ if(!ss.length) return {h:'확인 필요',why:'하위 업무 없음'};
+ if(ss.some(t=>open(t)&&!t.t)) return {h:'확인 필요',why:'제목 없는 하위 업무'};
+ if(!p.end && !ss.some(t=>open(t)&&t.d)) return {h:'확인 필요',why:'마감일·다음 날짜 없음'};
+ return {h:'정상',why:''};
+}
+const active = () => PROJECTS.filter(p=>p.st==='진행중');
+function ddayChip(s){ const n=dnum(s); if(n===null) return '<span class="chip c-gray">날짜 없음</span>';
+ if(n<0) return `<span class="chip c-red">${-n}일 지남</span>`; if(n===0) return '<span class="chip c-orgs">오늘</span>';
+ if(n<=3) return `<span class="chip c-org">${dd(s)} · D-${n}</span>`; return `<span class="chip c-gray">${md(s)} · D-${n}</span>`; }
+const whoTxt = w => w.length ? w.join(' · ') : '<span style="color:var(--red)">담당자 없음</span>';
+const pin = (n) => `<button class="pin" data-pin="${n}" aria-label="개발 메모 ${n}번 보기">${n}</button>`;
+function toast(m){const e=document.getElementById('toast');e.textContent=m;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2200);}
+const CH = {'기사PR':['#FEF3C7','#78350F'],'홈페이지':['#EDE9FE','#5B21B6'],'카톡정기메세지':['#FEE2E2','#7F1D1D'],'N블로그':['#DCFCE7','#14532D'],'인스타그램':['#FCE7F3','#831843']};
+const chChip = c => c ? `<span class="chip" style="flex:none;font-weight:700;background:${CH[c][0]};color:${CH[c][1]}">${c==='카톡정기메세지'?'카톡':c}</span>` : `<span class="chip" style="flex:none;border:1px dashed #C9C7C0;color:var(--mute2)">발행처 미정</span>`;
+const stChip = s => `<span class="chip ${({'사진수급필요':'c-redl','대기':'c-gray','작성중':'c-blu','발행대기':'c-yel','발행완료':'c-grn'})[s]}">${s}</span>`;
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ========= 화면 ========= */
+const V = {};
+
+V.home = () => {
+ const r=state.role, admin=ADMINS.includes(r)&&r==='정미경';
+ const scope = t => admin ? true : mine(t,r);
+ const overdue = TASKS.filter(t=>isOver(t)&&scope(t));
+ const stall = active().filter(p=>health(p).why.startsWith('시작 후') && (admin||p.who.includes(r)));
+ const week = TASKS.filter(t=>open(t)&&t.d&&dnum(due(t))>=0&&dnum(due(t))<=7&&scope(t));
+ const todayItems = [...TASKS.filter(t=>t.d===TODAY&&scope(t)).map(t=>({time:t.time||'종일',t:t.t,src:'task'})),
+   ...GCAL.filter(e=>(e.d<=TODAY&&(e.end||e.d)>=TODAY)).map(e=>({time:e.time||'종일',t:e.t,src:e.src}))];
+ const goalsDone = state.goals.filter(g=>g.done).length;
+ const groups = {}; [...overdue].sort((a,b)=>dnum(due(a))-dnum(due(b))).forEach(t=>{ (t.who.length?t.who:['담당자 없음']).forEach(w=>{ if(!admin&&w!==r) return; (groups[w]=groups[w]||[]).push(t);});});
+ stall.forEach(p=>p.who.forEach(w=>{ if(!admin&&w!==r) return; (groups[w]=groups[w]||[]).unshift({t:p.name,p:p.k,stall:-dnum(p.start)});}));
+ const gov = active().filter(p=>p.cat==='정부지원과제').sort((a,b)=>(a.end||'9')>(b.end||'9')?1:-1);
+ const imp = PROJECTS.filter(p=>p.imp&&p.st==='진행중'&&p.end&&dnum(p.end)>=0&&dnum(p.end)<=14);
+ const weekContent = CONTENTS.filter(c=>c.d&&dnum(c.d)>=0&&dnum(c.d)<=7);
+ const notReady = CONTENTS.filter(c=>c.st!=='발행완료'&&(!c.d||c.st==='사진수급필요'));
+ const sales = state.salesEx?SALES_EX:SALES_REAL;
+ return `
+ <header class="row" style="align-items:flex-end;flex-wrap:wrap">
+  <div><h1>11월 26일 목요일</h1><p class="sub">${admin?'대표님 · 팀 전체 기준':r+' 님 · 내 업무 기준'}</p></div>
+ </header>
+
+ <section class="sec" id="h1"><div class="sec-h"><h2>${pin(1)} 1 · 오늘 상태</h2><span class="hint">숫자를 누르면 해당 목록으로 이동</span></div>
+  <div class="grid g4">
+   <button class="kpi ${overdue.length+stall.length?'alert':''}" data-go="progress" data-preset="지연"><span class="l">마감 지난 업무</span><span class="n">${overdue.length+stall.length}</span><span class="s">${stall.length?'가장 오래: '+stall[0].name.split(' ')[0]+' '+(-dnum(stall[0].start))+'일':'지난 업무 '+overdue.length}</span></button>
+   <button class="kpi" data-go="calendar"><span class="l">7일 안 마감</span><span class="n">${week.length}</span><span class="s">30일(월)에 ${week.filter(t=>t.d==='2026-11-30').length}건 몰림</span></button>
+   <button class="kpi" data-go="calendar"><span class="l">오늘 일정</span><span class="n">${todayItems.length}</span><span class="s">${todayItems.find(x=>x.time!=='종일')?todayItems.find(x=>x.time!=='종일').time+' '+todayItems.find(x=>x.time!=='종일').t:''}</span></button>
+   <button class="kpi" data-go="content"><span class="l">발행 막힌 콘텐츠</span><span class="n">${CONTENTS.filter(c=>c.st!=='발행완료'&&c.d&&dnum(c.d)<0).length + notReady.length}</span><span class="s">예정일 지남 ${CONTENTS.filter(c=>c.st!=='발행완료'&&c.d&&dnum(c.d)<0).length} · 날짜·사진 없음 ${notReady.length}</span></button>
+  </div></section>
+
+ <section class="sec" id="h5"><div class="sec-h"><h2>${pin(2)} 2 · 2주 안 중요 일정</h2><span class="hint">업무 DB 중요도=높음 · 목표일정 D-14~D-day</span></div>
+  <div class="card scrollx"><div class="tl">
+   <div class="axis"></div>
+   ${[0,4,7,11,14].map(n=>`<span class="tick" style="left:${n/14*100}%;${n===0?'transform:none;color:var(--red);font-weight:700':''}${n===14?';transform:translateX(-100%)':''}">${n===0?'오늘 26일':n===14?'D-14 · 12월 10일':md(new Date(new Date(TODAY).getTime()+n*864e5).toISOString().slice(0,10))}</span>`).join('')}
+   ${(()=>{ const byDay={}; imp.forEach(p=>{(byDay[p.end]=byDay[p.end]||[]).push(p)}); return Object.entries(byDay).map(([d,ps])=>{ const n=dnum(d), x=n/14*100, col=n===0?'var(--red)':n<=4?'#C2410C':'#57534E', bg=n===0?'var(--redbg)':n<=4?'#FFF4ED':'#F5F5F3';
+     return `<span class="dot" style="left:${x}%;background:${col}"></span>`+ps.map((p,i)=>`<div class="lab" style="top:${56+i*62}px;left:${Math.max(0,x-4)}%;background:${bg}"><b style="color:${col}">${n===0?'오늘':n+'일 남음 · '+md(d)}</b><b style="font-size:14px;color:var(--ink)">${p.name}</b><span class="muted">${p.cat}</span></div>`).join(''); }).join(''); })()}
+  </div></div></section>
+
+ <section class="sec" id="h2"><div class="sec-h"><h2>${pin(3)} 3 · 이번 주 목표와 팔로업</h2></div>
+  <div class="grid g2">
+   <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="row"><h3>공동 주간목표 <span class="ex">예시</span></h3><span class="muted s13">11/23 – 11/29</span></div>
+    <div class="row s13"><b>${state.goals.length}개 중 ${goalsDone}개 달성</b><span class="muted">${Math.round(goalsDone/state.goals.length*100)}%</span></div>
+    <div class="bar" style="height:10px"><i style="width:${goalsDone/state.goals.length*100}%"></i></div>
+    ${state.goals.map((g,i)=>`<label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer"><input type="checkbox" data-goal="${i}" ${g.done?'checked':''} style="width:20px;height:20px;margin:2px 0 0;accent-color:#1C1C1A"><span><span style="${g.done?'color:var(--mute);text-decoration:line-through':'font-weight:500'}">${esc(g.t)}</span><br><span class="muted s13">${g.who}</span></span></label>`).join('')}
+    <form id="goalForm" style="display:flex;gap:8px"><label class="vis-hidden" for="goalIn">새 목표</label><input id="goalIn" type="text" placeholder="+ 목표 추가 (Enter)"><button class="btn">추가</button></form>
+   </div>
+   <div class="card" style="display:flex;flex-direction:column;gap:14px">
+    <div class="row" style="flex-wrap:wrap"><h3>팔로업 필요</h3><span class="muted s13">마감 지난 업무 · 담당자별 · 오래된 순</span></div>
+    ${Object.keys(groups).length?Object.entries(groups).sort((a,b)=>b[1].length-a[1].length).map(([w,ts])=>`
+     <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">${AV[w]?`<span class="av ${AV[w][1]}">${AV[w][0]}</span>`:''}<b>${w}</b><span class="muted s13">${ts.length}건</span></div>
+      ${ts.map(t=>`<div class="item"><span><span style="font-weight:500">${esc(t.t)}</span><br><span class="muted small">${t.stall?'프로젝트 · 마감일 없음':proj(t.p).name}</span></span>${t.stall?`<span class="chip c-red">${t.stall}일째</span>`:`<span class="chip ${-dnum(due(t))>=3?'c-red':'c-redl'}">${-dnum(due(t))}일 지남</span>`}</div>`).join('')}
+     </div>`).join(''):'<div class="empty">지난 업무가 없어요</div>'}
+    <button class="btn" data-go="progress" style="align-self:flex-start">진행 현황에서 전체 보기 →</button>
+   </div>
+  </div></section>
+
+ <section class="sec" id="h6"><div class="sec-h"><h2>${pin(4)} 4 · 오늘과 이번 주 흐름</h2></div>
+  <div class="grid g3">
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row"><h3>오늘 일정</h3><button class="btn" data-go="calendar" style="min-height:34px">캘린더 →</button></div>
+    ${todayItems.map(x=>`<div class="row" style="justify-content:flex-start;gap:12px"><span class="ev g-${x.src}" style="width:62px;text-align:center;flex:none">${x.time}</span><span>${esc(x.t)}</span></div>`).join('')}</div>
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row"><h3>콘텐츠 · 준비 안 된 것</h3><button class="btn" data-go="content" style="min-height:34px">콘텐츠 →</button></div>
+    ${weekContent.length?'':'<span class="s13 muted">이번 주 발행일이 잡힌 콘텐츠가 없어요</span>'}
+    ${notReady.slice(0,4).map(c=>`<div class="row" style="justify-content:flex-start;gap:8px">${chChip(c.cat)}<span style="flex:1">${c.t}</span><span class="chip ${c.st==='사진수급필요'?'c-red':'c-org'}">${c.st==='사진수급필요'?'사진 필요':'발행일 없음'}</span></div>`).join('')}
+    <span class="s13 muted">외 ${Math.max(0,notReady.length-4)}건</span></div>
+   <div class="card" style="display:flex;flex-direction:column;gap:10px"><div class="row"><h3>이번 달 결제 예정</h3><button class="btn" data-go="subs" style="min-height:34px">구독료 →</button></div>
+    ${state.subs.slice(0,3).map(s=>`<div class="row"><span>${esc(s.n)}</span><span class="muted">${esc(s.d)} · ${esc(s.amt)}</span></div>`).join('')}</div>
+  </div></section>
+
+ <section class="sec" id="h3"><div class="sec-h"><h2>${pin(5)} 5 · 정부지원사업 진행중 ${gov.length}</h2><span class="hint">마감 빠른 순 · 보류 ${PROJECTS.filter(p=>p.cat==='정부지원과제'&&p.st==='보류').length}건 제외</span></div>
+  <div class="grid g3">${gov.map(p=>{ const ss=subs(p.k), done=ss.filter(t=>t.st==='완료'), rest=ss.filter(open).sort((a,b)=>(due(a)||'9')>(due(b)||'9')?1:-1);
+   const now = p.k==='hrd'?'교육 참석(23–25일) 끝남 · 노션에서 완료 처리 필요': p.k==='ir'?'오늘 최종 발표 당일': done.length?md(done[done.length-1].d)+' '+done[done.length-1].t+' 완료':'<span class="muted">이번 주 업데이트 없음</span>';
+   return `<article class="card" style="display:flex;flex-direction:column;gap:12px;${p.end&&dnum(p.end)<=0?'border-color:var(--redbd)':''}">
+    <div class="row" style="align-items:flex-start"><h3>${p.name}</h3>${ddayChip(p.end)}</div>
+    <div style="display:flex;flex-direction:column;gap:6px"><span class="small muted" style="font-weight:700">현재 진행상황</span>
+     ${ss.length?`<div style="display:flex;align-items:center;gap:10px"><div class="bar"><i style="width:${done.length/ss.length*100}%"></i></div><span class="s13">${done.length}/${ss.length}</span></div>`:''}
+     <span>${ss.length?now:'<span class="muted">하위 업무가 없어서 진행률을 알 수 없어요</span>'}</span></div>
+    <div class="sublist"><span class="small muted" style="font-weight:700">앞으로 할 것</span>
+     ${rest.length?rest.map(t=>`<div class="row" style="font-size:14px"><span style="${t.t?'':'color:var(--org)'}">${t.t?esc(t.t):'제목 없는 업무'}</span><span class="s13" style="flex:none;${isOver(t)||dnum(due(t))===0?'color:var(--red);font-weight:700':'color:var(--mute2)'}">${isOver(t)?(-dnum(due(t)))+'일 지남':t.d?(dnum(t.d)===0?'오늘'+(t.time?' '+t.time:''):dd(t.d)):'날짜 없음'} · ${t.who.join('·')||'담당 없음'}</span></div>`).join(''):'<span class="s13 muted">아직 안 적혀 있어요</span>'}
+     <a href="${p.url}" target="_blank" rel="noopener" class="s13">노션에서 열기 →</a></div>
+   </article>`;}).join('')}</div></section>
+
+ <section class="sec" id="h4"><div class="sec-h"><h2>${pin(6)} 6 · 영업 활동</h2><span class="hint">노션 💼 영업활동 DB · <button class="pill" id="exBtn" aria-pressed="${state.salesEx}" style="min-height:32px">예시 데이터로 보기</button></span></div>
+  ${sales.length?`<div class="grid g4">${salesCols(sales,true)}</div>`:`<div class="empty">노션 💼 영업활동 DB가 아직 비어 있어요. 업체를 추가하면 단계별(제안서 보내야 함 / 보냄·회신 대기 / 리드·컨택·미팅 / 성사)로 여기에 정리돼요. 오른쪽 위 ‘예시 데이터로 보기’로 모양을 확인할 수 있어요.</div>`}
+ </section>`;
+};
+
+function salesCols(list, compact){
+ const cols=[['제안서 보내야 함',s=>s.stage==='제안서 보내야 함'],['제안서 보냄 · 회신 대기',s=>s.stage==='제안서 보냄'],['리드 · 컨택 · 미팅',s=>['리드','컨택','미팅'].includes(s.stage)],['성사',s=>s.stage==='성사']];
+ return cols.map(([h,f])=>{ const xs=list.filter(f); return `<div class="card" style="padding:16px;display:flex;flex-direction:column;gap:10px"><div class="row"><h3 style="font-size:15px">${h}</h3><b style="font-size:20px">${xs.length}</b></div>
+ ${xs.map(s=>{ const late = (s.stage==='제안서 보냄'&&s.sent&&dnum(s.sent)<=-7) || (s.nextD&&dnum(s.nextD)<0);
+  const line = s.stage==='제안서 보냄'? `발송 후 ${-dnum(s.sent)}일${dnum(s.sent)<=-7?' · 회신 없음':''}` : s.nextD? (dnum(s.nextD)<0?`다음 액션일 ${-dnum(s.nextD)}일 지남`:`${s.next} · ${md(s.nextD)}`) : (s.next||'');
+  return `<div class="item ${late?'red':''}" style="flex-direction:column;align-items:flex-start;gap:3px"><b>${s.n}</b>${s.what?`<span class="small muted">${s.what}</span>`:''}<span class="small" style="${late?'color:var(--red);font-weight:700':'color:var(--mute2)'}">${line} · ${s.who}</span></div>`;}).join('')}
+ ${h==='성사'?`<span class="s13 muted">진행중 예상 금액 합계 [금액]</span>`:''}</div>`;}).join('');
+}
+
+V.calendar = () => {
+ const c=state.cal, start='2026-11-23';
+ const days=[...Array(14)].map((_,i)=>new Date(new Date(start).getTime()+i*864e5).toISOString().slice(0,10));
+ const pf = w => c.person==='전체' || w.includes(c.person);
+ const evOn = (d) => {
+  const out=[];
+  if(c.leave) GCAL.filter(e=>e.src==='leave'&&e.d<=d&&e.end>=d&&pf(e.who)).forEach(e=>out.push(`<span class="ev g-leave">${e.t}</span>`));
+  if(c.ceo) GCAL.filter(e=>e.src==='ceo'&&e.d===d&&pf(e.who)).forEach(e=>out.push(`<span class="ev g-ceo">${e.time} ${e.t}</span>`));
+  if(c.company) GCAL.filter(e=>e.src==='company'&&e.d===d).forEach(e=>out.push(`<span class="ev g-company">${e.t}</span>`));
+  if(c.task){ TASKS.filter(t=>t.d===d&&pf(t.who)).forEach(t=>out.push(`<span class="ev ${t.st==='완료'?'done':'g-task'+(isOver(t)?' over':'')}" title="${proj(t.p).name}">${isOver(t)?'지남 · ':''}${t.time?t.time+' ':''}${esc(t.t||'제목 없음')}<br><span class="small">${t.who.join('·')}</span></span>`));
+   PROJECTS.filter(p=>p.st==='진행중'&&p.end===d&&pf(p.who)).forEach(p=>out.push(`<span class="ev g-task" style="border-style:dashed">종료 · ${p.name}</span>`)); }
+  if(c.content) CONTENTS.filter(x=>x.d===d).forEach(x=>out.push(`<span class="ev g-content">${x.t}</span>`));
+  return out;
+ };
+ const cnt30 = TASKS.filter(t=>t.d==='2026-11-30'&&open(t)).length + PROJECTS.filter(p=>p.st==='진행중'&&p.end==='2026-11-30').length;
+ const srcs=[['company','회사 일정','c-blu'],['ceo','대표님 일정','c-org'],['leave','연차·인사','c-gray'],['task','노션 업무 마감',''],['content','콘텐츠 발행','c-pur']];
+ return `<header><h1>캘린더</h1><p class="sub">구글 캘린더 3개 + 노션 업무 마감 + 콘텐츠 발행을 한 달력에서</p></header>
+ <section class="sec" id="c1"><div class="sec-h"><h2>${pin(1)} 보이는 일정 고르기</h2></div>
+  <div class="pillbar" role="group" aria-label="일정 출처">${srcs.map(([k,l])=>`<button class="pill src" data-src="${k}" aria-pressed="${c[k]}">${l}</button>`).join('')}
+  <label style="display:flex;align-items:center;gap:6px;margin-left:8px" class="s13">사람 <select class="f" id="calPerson" style="width:auto;min-height:40px">${['전체',...PEOPLE].map(p=>`<option ${c.person===p?'selected':''}>${p}</option>`).join('')}</select></label></div></section>
+ <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start">
+ <section class="sec card scrollx" id="c2" style="flex:999 1 640px;min-width:0;padding:14px"><div class="sec-h"><h2>${pin(2)} 11월 23일 – 12월 6일</h2></div>
+  <div class="cal">${['월','화','수','목','금','토','일'].map(x=>`<div class="dow">${x}</div>`).join('')}
+  ${days.map(d=>{ const ev=evOn(d), n=dnum(d), crunch = d==='2026-11-30'&&c.task;
+   return `<div class="day ${n===0?'today':''} ${crunch?'crunch':''}"><span class="dn"><span>${d.endsWith('-01')?'12/1':+d.slice(8)}${n===0?' · 오늘':''}</span>${crunch?`<span class="chip c-red" style="font-size:11px">마감 ${cnt30}</span>`:''}</span>${ev.slice(0,crunch?5:6).join('')}${ev.length>(crunch?5:6)?`<span class="small muted">+${ev.length-(crunch?5:6)}건</span>`:''}</div>`;}).join('')}</div>
+  <p class="s13 muted" style="margin:12px 4px 0">콘텐츠는 발행일이 비어 있는 게 많아 이번 2주에 표시된 게 없어요 · <button class="btn" data-go="content" style="min-height:32px">발행일 없는 콘텐츠 보기</button></p></section>
+ <aside class="sec" id="c3" style="flex:1 1 280px;min-width:0"><div class="sec-h"><h2>${pin(3)} 자동으로 찾은 겹침·쏠림</h2></div>
+  <div class="card" style="border-color:var(--redbd)"><span class="small" style="color:var(--red);font-weight:700">마감 쏠림</span><h3 style="margin:4px 0">30일(월)에 마감 ${cnt30}건</h3><span class="s13 muted">업무 마감 ${TASKS.filter(t=>t.d==='2026-11-30'&&open(t)).length}건 + 프로젝트 종료 ${PROJECTS.filter(p=>p.st==='진행중'&&p.end==='2026-11-30').length}건</span></div>
+  <div class="card"><span class="small" style="color:var(--org);font-weight:700">연차와 겹침</span><h3 style="margin:4px 0">김진 연차(25–27일) ↔ 교육 참석(23–25일)</h3><span class="s13 muted">교육 참석은 노션에서 아직 '진행중'이에요</span></div>
+  <div class="card"><span class="small" style="color:var(--org);font-weight:700">같은 날 몰림</span><h3 style="margin:4px 0">오늘 정미경 님 마감 2건</h3><span class="s13 muted">시연영상 제출과 15:30 최종 발표</span></div>
+ </aside></div>`;
+};
+
+V.progress = () => {
+ const f=state.prog; const cats=['전체','정부지원과제','운영','개발'];
+ let ps=active().map(p=>({...p,hh:health(p)}));
+ if(f.cat!=='전체') ps=ps.filter(p=>p.cat===f.cat);
+ const cnt=h=>ps.filter(p=>p.hh.h===h).length;
+ const show=h=>f.health==='전체'||f.health===h;
+ const col=(h,cls,bg,fg)=>show(h)?`<section class="sec" style="gap:10px"><h2 style="margin:0;padding:10px 14px;border-radius:12px;background:${bg};color:${fg};font-size:15px">${h} ${cnt(h)}</h2>
+  ${ps.filter(p=>p.hh.h===h).map(p=>{ const ss=subs(p.k), dn=ss.filter(t=>t.st==='완료').length, opn=f.open===p.k;
+   return `<button class="proj" data-proj="${p.k}" aria-expanded="${opn}"><div class="row" style="align-items:flex-start"><b style="font-size:15px">${p.name}</b><span class="small muted" style="flex:none">${p.cat}</span></div>
+   ${ss.length?`<div style="display:flex;align-items:center;gap:10px;width:100%"><div class="bar"><i style="width:${dn/ss.length*100}%;${h==='정상'?'background:var(--grn)':''}"></i></div><span class="s13">${dn}/${ss.length}</span></div>`:''}
+   <div class="pillbar" style="gap:6px">${p.hh.why?`<span class="chip ${h==='지연'?'c-red':'c-org'}">${p.hh.why}</span>`:''}${p.end?ddayChip(p.end):''}</div>
+   <span class="s13 muted">${p.who.join(' · ')}</span>
+   ${opn?`<div class="sublist" style="width:100%">${ss.map(t=>`<div class="row s13"><span style="${t.st==='완료'?'color:var(--mute);text-decoration:line-through':''}">${t.t?esc(t.t):'<span style="color:var(--org)">제목 없는 업무</span>'}</span><span style="flex:none;${isOver(t)?'color:var(--red);font-weight:700':'color:var(--mute2)'}">${t.st==='완료'?'완료':isOver(t)?(-dnum(due(t)))+'일 지남':t.d?md(t.d):'날짜 없음'}</span></div>`).join('')}<a href="${p.url}" target="_blank" rel="noopener" class="s13">노션에서 열기 →</a></div>`:'<span class="small muted">눌러서 하위 업무 보기</span>'}
+   </button>`;}).join('')}</section>`:'';
+ const doneWeek = TASKS.filter(t=>t.doneAt&&t.doneAt>='2026-11-23').length;
+ return `<header class="row" style="flex-wrap:wrap;align-items:flex-end"><div><h1>진행 현황</h1><p class="sub">진행중 프로젝트를 진행 상황(지연·확인 필요·정상)으로 묶었어요 · 노션 업무 DB</p></div></header>
+ <section class="sec" id="p1"><div class="sec-h"><h2>${pin(1)} 필터</h2></div>
+  <div class="pillbar" role="group" aria-label="카테고리">${cats.map(c=>`<button class="pill" data-cat="${c}" aria-pressed="${f.cat===c}">${c}</button>`).join('')}</div>
+  <div class="pillbar" role="group" aria-label="진행 상황">${['전체','지연','확인 필요','정상'].map(h=>`<button class="pill" data-health="${h}" aria-pressed="${f.health===h}">${h==='전체'?'상황 전체':h}</button>`).join('')}</div></section>
+ <section class="sec" id="p2"><div class="sec-h"><h2>${pin(2)} 요약</h2></div>
+  <div class="grid g4"><div class="kpi" style="cursor:default"><span class="l">진행중</span><span class="n">${ps.length}</span></div><div class="kpi alert" style="cursor:default"><span class="l">지연</span><span class="n">${cnt('지연')}</span></div><div class="kpi" style="cursor:default;background:var(--orgbg);border-color:var(--orgbd)"><span class="l">확인 필요</span><span class="n" style="color:var(--org)">${cnt('확인 필요')}</span></div><div class="kpi" style="cursor:default"><span class="l">이번 주 끝낸 업무</span><span class="n">${doneWeek}</span></div></div></section>
+ <div class="grid g3" id="p3" style="position:relative">${col('지연','','#FEE4E2','#7A271A')}${col('확인 필요','','#FFEDD5','#7C2D12')}${col('정상','','#DCFCE7','#14532D')}</div>
+ <section class="sec card" id="p4"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(4)} 노션 정리 필요</h2><span class="hint">빈칸이 있으면 위 진행 상황과 홈 숫자가 틀려져요</span></div>
+  <div class="grid g4">
+   <div class="item" style="flex-direction:column;align-items:flex-start"><b style="font-size:22px">${TASKS.filter(t=>!t.who.length).length}</b>담당자 없는 업무<span class="small muted">${TASKS.filter(t=>!t.who.length).map(t=>t.t||'제목 없음').join(', ')}</span></div>
+   <div class="item" style="flex-direction:column;align-items:flex-start"><b style="font-size:22px">${TASKS.filter(t=>!t.t).length}</b>제목 없는 업무<span class="small muted">강원 온라인마케터 인턴의 '2)'</span></div>
+   <div class="item" style="flex-direction:column;align-items:flex-start"><b style="font-size:22px">${active().filter(p=>!p.end).length}</b>마감일 없는 진행중 프로젝트<span class="small muted">${active().filter(p=>!p.end).map(p=>p.name.split(' ')[0]).join(', ')}</span></div>
+   <div class="item" style="flex-direction:column;align-items:flex-start"><b style="font-size:22px">${active().length}</b>'이번 주 업데이트'가 빈 프로젝트<span class="small muted">진행중 전부 · 위클리 때 한 줄씩</span></div>
+  </div></section>`;
+};
+
+V.team = () => {
+ const stats = PEOPLE.map(w=>{ const op=TASKS.filter(t=>open(t)&&mine(t,w)); const ov=op.filter(isOver).length; const wk=op.filter(t=>!isOver(t)&&t.d&&dnum(due(t))<=7).length;
+  return {w,op:op.length,ov,wk,later:op.length-ov-wk,done:TASKS.filter(t=>t.doneAt&&t.doneAt>='2026-11-23'&&mine(t,w)),over:op.filter(isOver),next:op.filter(t=>!isOver(t)&&t.d).sort((a,b)=>a.d>b.d?1:-1).slice(0,3)}; });
+ const max=Math.max(...stats.map(s=>s.op));
+ const days=['월','화','수','목','금','토','일'];
+ const leave=(w,i)=>GCAL.some(e=>e.src==='leave'&&e.who.includes(w)&&(()=>{const d=new Date(new Date('2026-11-23').getTime()+i*864e5).toISOString().slice(0,10);return e.d<=d&&e.end>=d})());
+ return `<header><h1>팀 현황</h1><p class="sub">이번 주(23–29일) 사람별로 · 노션 업무 + 연차·인사 캘린더</p></header>
+ <section class="sec card" id="t1"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(1)} 누가 얼마나 들고 있나</h2><div class="legend"><span><i class="chip c-red" style="padding:0 6px">&nbsp;</i> 지남</span><span><i class="chip" style="background:#EA580C;padding:0 6px">&nbsp;</i> 7일 안 마감</span><span><i class="chip" style="background:#C9C7C0;padding:0 6px">&nbsp;</i> 이후·날짜 없음</span></div></div>
+  ${stats.map(s=>`<div style="display:flex;align-items:center;gap:14px"><b style="width:56px;flex:none">${s.w}</b><div style="flex:1;display:flex;height:22px;border-radius:6px;overflow:hidden;background:#F5F5F3"><div style="width:${s.ov/max*100}%;background:var(--red)"></div><div style="width:${s.wk/max*100}%;background:#EA580C"></div><div style="width:${s.later/max*100}%;background:#C9C7C0"></div></div><b style="width:52px;text-align:right">${s.op}건</b></div>`).join('')}
+ </section>
+ <div class="grid g3" id="t2">${stats.map(s=>`<article class="card" style="display:flex;flex-direction:column;gap:14px">
+  <div class="row"><div style="display:flex;align-items:center;gap:10px"><span class="av ${AV[s.w][1]}" style="width:40px;height:40px">${AV[s.w][0]}</span><h3>${s.w}</h3></div>${leave(s.w,3)?'<span class="chip c-gray" style="font-weight:700">연차 중 · 30일 복귀</span>':''}</div>
+  <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center;font-size:11px">${days.map((d,i)=>`<span style="padding:6px 0;border-radius:6px;${leave(s.w,i)?'background:#57534E;color:#fff':i>4?'background:#F5F5F3;color:var(--mute)':'background:var(--grnbg);color:#14532D'};${i===3?'font-weight:700':''}">${leave(s.w,i)?'연차':d}</span>`).join('')}</div>
+  <div style="display:flex;flex-direction:column;gap:6px"><span class="small" style="color:var(--red);font-weight:700">지금 밀린 것 ${s.over.length}</span>${s.over.map(t=>`<span>${esc(t.t)} · ${-dnum(due(t))}일</span>`).join('')||'<span class="muted s13">없음</span>'}</div>
+  <div style="display:flex;flex-direction:column;gap:6px"><span class="small" style="color:var(--org);font-weight:700">다음 마감</span>${s.next.map(t=>`<span>${dnum(t.d)===0?'오늘':dd(t.d)} · ${esc(t.t)}</span>`).join('')||'<span class="muted s13">없음</span>'}</div>
+  <div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;border-top:1px solid var(--line2)"><span class="small" style="color:var(--grn);font-weight:700">이번 주 끝낸 일 ${s.done.length}</span>${s.done.map(t=>`<span class="muted">${esc(t.t)}</span>`).join('')||'<span class="muted s13">노션에서 완료로 바꾼 업무가 아직 없어요</span>'}</div>
+ </article>`).join('')}</div>
+ <section class="sec card" id="t3"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(3)} 담당자 없는 업무 ${TASKS.filter(t=>!t.who.length&&t.t).length}</h2></div>
+  ${TASKS.filter(t=>!t.who.length&&t.t).map((t,i)=>`<div class="row" style="flex-wrap:wrap"><span>${t.t} <span class="muted">· ${proj(t.p).name} · ${t.st}</span></span><span style="display:flex;gap:6px"><label class="vis-hidden" for="as${i}">담당자</label><select class="f" id="as${i}" style="width:auto"><option>담당자 선택</option>${PEOPLE.map(p=>`<option>${p}</option>`).join('')}</select><button class="btn" data-assign="${i}">지정</button></span></div>`).join('')}
+ </section>`;
+};
+
+V.sales = () => {
+ const list=state.salesEx?SALES_EX:SALES_REAL;
+ const late7=list.filter(s=>s.stage==='제안서 보냄'&&dnum(s.sent)<=-7), lateNext=list.filter(s=>s.nextD&&dnum(s.nextD)<0), cold=list.filter(s=>s.last&&dnum(s.last)<-30);
+ return `<header class="row" style="flex-wrap:wrap;align-items:flex-end"><div><h1>영업</h1><p class="sub">노션 💼 영업활동 DB를 읽어요 · 입력과 수정은 노션에서</p></div>
+  <div class="pillbar"><a class="btn pri" style="display:inline-flex;align-items:center;text-decoration:none" href="${N}424414e3663181908e0fc36236052a85" target="_blank" rel="noopener">+ 노션에 업체 추가</a><button class="pill" id="exBtn" aria-pressed="${state.salesEx}">예시 데이터로 보기</button></div></header>
+ ${list.length?'':`<div class="empty">노션 💼 영업활동 DB가 아직 비어 있어요(11/26 기준 0건). ‘예시 데이터로 보기’를 누르면 데이터가 들어왔을 때의 모양을 볼 수 있어요.</div>`}
+ <section class="sec" id="s1"><div class="sec-h"><h2>${pin(1)} 요약</h2></div><div class="grid g4">
+  <div class="kpi" style="cursor:default;background:var(--orgbg);border-color:var(--orgbd)"><span class="l">제안서 보내야 함</span><span class="n" style="color:var(--org)">${list.filter(s=>s.stage==='제안서 보내야 함').length}</span><span class="s">다음 액션일 지난 것 ${list.filter(s=>s.stage==='제안서 보내야 함'&&s.nextD&&dnum(s.nextD)<0).length}</span></div>
+  <div class="kpi ${late7.length?'alert':''}" style="cursor:default"><span class="l">발송 후 7일+ 회신 없음</span><span class="n">${late7.length}</span><span class="s">제안서 발송일 기준</span></div>
+  <div class="kpi" style="cursor:default"><span class="l">진행중 예상 금액</span><span class="n" style="font-size:30px">[금액]</span><span class="s">성사·드랍 제외 합계</span></div>
+  <div class="kpi" style="cursor:default"><span class="l">이번 달 성사</span><span class="n">${list.filter(s=>s.stage==='성사').length}</span><span class="s">[금액]</span></div></div></section>
+ <section class="sec" id="s2"><div class="sec-h"><h2>${pin(2)} 단계별</h2></div><div class="grid g4">${salesCols(list)}</div></section>
+ <section class="sec card" id="s3"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(3)} 팔로업 필요</h2><span class="hint">회신 7일+ 없음 · 다음 액션일 지남 · 최근 접촉 30일+</span></div>
+  ${[...late7.map(s=>[s,'회신 없음 '+(-dnum(s.sent))+'일','c-red']),...lateNext.filter(s=>!late7.includes(s)).map(s=>[s,'다음 액션일 '+(-dnum(s.nextD))+'일 지남','c-redl']),...cold.map(s=>[s,'접촉 없음 '+(-dnum(s.last))+'일','c-org'])].map(([s,l,c])=>`<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line2)"><span>${s.n} <span class="muted">· ${s.stage} · ${s.who}</span></span><span class="chip ${c}">${l}</span></div>`).join('')||'<span class="muted s13">팔로업할 업체가 없어요</span>'}
+ </section>`;
+};
+
+V.content = () => {
+ const f=state.content.st; const order=['사진수급필요','대기','작성중','발행대기','발행완료'];
+ const colors={'사진수급필요':['#B42318','#fff'],'대기':['#D6D4CE','#1C1C1A'],'작성중':['#BFDBFE','#1E3A8A'],'발행대기':['#FDE68A','#78350F'],'발행완료':['#BBF7D0','#14532D']};
+ const list = CONTENTS.filter(c=>!f||c.st===f);
+ const stuck = c => c.st!=='발행완료' && ((c.d&&dnum(c.d)<0)||!c.d||c.st==='사진수급필요');
+ const why = c => c.st==='발행완료'?'':c.d&&dnum(c.d)<0?`예정일 ${-dnum(c.d)}일 지남`:c.st==='사진수급필요'?'사진 필요':!c.d?'발행일 없음':'';
+ const cats=['기사PR','홈페이지','카톡정기메세지','N블로그','인스타그램',null]; const cmax=Math.max(...cats.map(k=>CONTENTS.filter(c=>c.cat===k).length));
+ const last = CONTENTS.filter(c=>c.st==='발행완료').map(c=>c.d).sort().pop();
+ return `<header><h1>콘텐츠</h1><p class="sub">노션 🖼️ 콘텐츠 캘린더를 읽어 발행이 막힌 것만 추려요 · 수정은 노션에서</p></header>
+ <section class="sec" id="o1"><div class="sec-h"><h2>${pin(1)} 요약</h2></div><div class="grid g4">
+  <div class="kpi alert" style="cursor:default"><span class="l">마지막 발행완료</span><span class="n" style="font-size:30px">${md(last)}</span><span class="s">그 뒤로 완료 표시된 게 없어요</span></div>
+  <div class="kpi" style="cursor:default"><span class="l">예정일 지났는데 미발행</span><span class="n">${CONTENTS.filter(c=>c.st!=='발행완료'&&c.d&&dnum(c.d)<0).length}</span></div>
+  <div class="kpi" style="cursor:default"><span class="l">발행일 없음</span><span class="n">${CONTENTS.filter(c=>!c.d).length}<span style="font-size:16px;color:var(--mute)"> / ${CONTENTS.length}</span></span></div>
+  <div class="kpi" style="cursor:default"><span class="l">담당자 없음</span><span class="n">${CONTENTS.length}<span style="font-size:16px;color:var(--mute)"> / ${CONTENTS.length}</span></span><span class="s">담당자 칸은 11/25 추가</span></div></div></section>
+ <section class="sec card" id="o2"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(2)} 준비 단계별 · 막대를 누르면 그 단계만 보여요</h2>${f?`<button class="btn" id="stClear" style="min-height:34px">전체 보기</button>`:''}</div>
+  <div style="display:flex;height:46px;border-radius:10px;overflow:hidden">${order.map(s=>{const n=CONTENTS.filter(c=>c.st===s).length;return `<button data-st="${s}" aria-pressed="${f===s}" style="width:${n/CONTENTS.length*100}%;border:0;background:${colors[s][0]};color:${colors[s][1]};font-weight:700;cursor:pointer;${f&&f!==s?'opacity:.35':''}">${n}</button>`}).join('')}</div>
+  <div class="legend" style="font-size:13px;color:var(--ink2)">${order.map(s=>`<span>${s} ${CONTENTS.filter(c=>c.st===s).length}</span>`).join('')}</div></section>
+ <div class="grid g2">
+  <section class="sec card" id="o3"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(3)} ${f?f+' '+list.length:'전체 '+list.length+' · 막힌 것 '+list.filter(stuck).length}</h2><span class="hint">발행일 · 발행처 · 제목 · 상태</span></div>
+   ${list.slice().sort((a,b)=>(a.d||'9999')>(b.d||'9999')?1:-1).map(c=>`<div class="item ${c.st!=='발행완료'&&c.d&&dnum(c.d)<0?'red':''}" style="justify-content:flex-start;flex-wrap:wrap;gap:10px">
+     <span class="s13" style="width:76px;flex:none;font-weight:700;${c.d?(dnum(c.d)<0&&c.st!=='발행완료'?'color:var(--red)':''):'color:var(--mute)'}">${c.d?md(c.d):'날짜 없음'}</span>
+     ${chChip(c.cat)}
+     <b style="font-weight:500;flex:1;min-width:140px">${c.t}</b>
+     <span style="display:flex;gap:6px;flex-wrap:wrap">${stChip(c.st)}${why(c)?`<span class="chip ${c.d&&dnum(c.d)<0?'c-red':c.st==='사진수급필요'?'c-redl':'c-org'}">${why(c)}</span>`:''}</span></div>`).join('')}</section>
+  <section class="sec card" id="o4"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(4)} 채널별 콘텐츠 수</h2></div>
+   ${cats.map(k=>{const n=CONTENTS.filter(c=>c.cat===k).length;return `<div style="display:flex;align-items:center;gap:12px"><span style="width:110px;flex:none;${k?'':'color:var(--mute)'}">${k||'미분류'}</span><div class="bar" style="height:16px;border-radius:4px"><i style="width:${n/cmax*100}%;background:${k?'#57534E':'#C9C7C0'}"></i></div><b style="width:24px;text-align:right;${n?'':'color:var(--red)'}">${n}</b></div>`}).join('')}
+   <p class="s13 muted" style="margin:4px 0 0">기사PR에 몰려 있고 N블로그·인스타그램은 아직 없어요.</p></section>
+ </div>`;
+};
+
+V.subs = () => `<header class="row" style="flex-wrap:wrap;align-items:flex-end"><div><h1>구독료</h1><p class="sub">매달·매년 나가는 서비스 · 결제 3일 전 슬랙 #경영 알림 · 백오피스에서 직접 입력</p></div></header>
+ <section class="sec" id="u1"><div class="sec-h"><h2>${pin(1)} 요약</h2></div><div class="grid g4">
+  <div class="kpi" style="cursor:default"><span class="l">이번 달 합계</span><span class="n" style="font-size:30px">[금액]</span></div>
+  <div class="kpi" style="cursor:default"><span class="l">1년으로 치면</span><span class="n" style="font-size:30px">[금액]</span></div>
+  <div class="kpi" style="cursor:default;background:var(--orgbg);border-color:var(--orgbd)"><span class="l">다음 결제</span><span class="n" style="font-size:20px">${esc(state.subs[0].n)}</span><span class="s">${esc(state.subs[0].d)} · ${esc(state.subs[0].amt)}</span></div>
+  <div class="kpi" style="cursor:default"><span class="l">해지 검토</span><span class="n">${state.subs.filter(s=>s.st==='해지 검토').length}</span></div></div></section>
+ <section class="sec card" id="u2"><div class="sec-h"><h2 style="font-size:16px;color:var(--ink)">${pin(2)} 구독 목록</h2></div>
+  <div class="scrollx"><table><thead><tr><th>서비스</th><th>주기</th><th>다음 결제일</th><th>금액</th><th>결제 수단</th><th>담당</th><th>상태</th></tr></thead>
+  <tbody>${state.subs.map((s,i)=>`<tr><td><b style="font-weight:500">${esc(s.n)}</b></td><td>${s.cyc}</td><td>${esc(s.d)}</td><td>${esc(s.amt)}</td><td>${esc(s.card)}</td><td>${esc(s.who)}</td><td><button class="pill" data-subst="${i}" style="min-height:32px">${s.st}</button></td></tr>`).join('')}</tbody></table></div>
+  <form id="subForm" class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end;margin-top:8px">
+   <label class="f">서비스<input type="text" name="n" required placeholder="예: Canva"></label>
+   <label class="f">주기<select class="f" name="cyc"><option>매월</option><option>매년</option></select></label>
+   <label class="f">다음 결제일<input type="date" name="d"></label>
+   <label class="f">금액(원)<input type="number" name="amt" min="0"></label>
+   <label class="f">카드 끝 4자리<input type="text" name="card" maxlength="4" inputmode="numeric" pattern="[0-9]{4}"></label>
+   <button class="btn pri">+ 추가</button></form>
+  <p class="small muted" style="margin:0">카드 번호는 끝 4자리만 저장 · 해지하면 지우지 않고 '해지됨'으로 남겨 이력 보관 · 상태 칩을 누르면 사용중 → 해지 검토 → 해지됨</p></section>`;
+
+V.mail = () => {
+ const tabs=[['none','액션 없음'],['doing','진행중'],['over','기한 지남'],['done','완료']];
+ const inTab = m => state.mailTab==='over' ? (m.st==='doing'&&m.action&&dnum(m.action.d)<0) : m.st===state.mailTab;
+ const list = state.mails.filter(inTab); const sel = state.mails.find(m=>m.id===state.mailSel)||list[0];
+ return `<header><h1>메일 공유함</h1><p class="sub">각자 고른 메일이 모이는 곳 · 담당자와 기한이 정해져야 닫혀요</p></header>
+ <section class="sec" id="m1"><div class="sec-h"><h2>${pin(1)} 상태</h2></div><div class="pillbar" role="tablist">${tabs.map(([k,l])=>`<button class="pill" role="tab" data-mtab="${k}" aria-pressed="${state.mailTab===k}" aria-selected="${state.mailTab===k}">${l} ${state.mails.filter(m=>k==='over'?(m.st==='doing'&&m.action&&dnum(m.action.d)<0):m.st===k).length}</button>`).join('')}</div></section>
+ <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+  <section class="sec" id="m2" style="flex:1 1 340px;min-width:0"><div class="sec-h"><h2>${pin(2)} 메일 <span class="ex">예시</span></h2></div>
+   <div class="card" style="padding:0;overflow:hidden">${list.map(m=>`<button class="mail ${sel&&sel.id===m.id?'on':''}" data-mail="${m.id}"><span class="row s13 muted"><span>${m.from}</span><span>${m.when}</span></span><b>${m.subj}</b><span class="small ${m.st==='doing'&&m.action&&dnum(m.action.d)<0?'':'muted'}" style="${m.st==='doing'&&m.action&&dnum(m.action.d)<0?'color:var(--red);font-weight:700':''}">${m.by} 님이 공유${m.action?' · '+m.action.who+' · '+md(m.action.d):''}</span></button>`).join('')||'<div class="empty" style="margin:12px">이 상태의 메일이 없어요</div>'}</div></section>
+  <section class="sec card" id="m3" style="flex:999 1 440px;min-width:0">${sel?`<div class="sec-h"><h2 style="font-size:18px;color:var(--ink)">${pin(3)} ${sel.subj}</h2></div>
+   <span class="s13 muted">${sel.from} → ${sel.by} 메일함에서 공유</span>
+   <div style="display:flex;flex-direction:column;gap:8px">
+    <span class="small muted" style="font-weight:700">메모 · 공유한 사람이 메일을 전달할 때 맨 위에 쓴 글</span>
+    ${sel.memo?`<div class="item" style="display:block"><b>${sel.by}</b> · ${esc(sel.memo)}</div>`:'<span class="s13 muted">전달할 때 쓴 메모가 없어요</span>'}
+    ${(sel.notes||[]).map(n=>`<div class="item" style="display:block;background:#fff;border:1px solid var(--line)"><b>${n.who}</b> · ${esc(n.t)} <span class="small muted">· 백오피스</span></div>`).join('')}
+    <form id="noteForm" style="display:flex;gap:8px"><label class="vis-hidden" for="noteIn">메모 추가</label><input id="noteIn" type="text" placeholder="백오피스에서 메모 덧붙이기 (예: 대표님 확인 필요)"><button class="btn">추가</button></form></div>
+   <div class="muted">[메일 본문 미리보기 · 원문은 Gmail에서 열기]</div>
+   ${sel.st==='none'?`<form id="actForm" style="display:flex;flex-direction:column;gap:12px;padding-top:14px;border-top:1px solid var(--line2)"><h3>액션 만들기</h3>
+    <label class="f">할 일<input type="text" name="t" required value="${sel.id===1?'바뀐 결과보고 양식 확인':''}"></label>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))"><label class="f">담당자<select class="f" name="who">${PEOPLE.map(p=>`<option>${p}</option>`).join('')}</select></label>
+    <label class="f">기한<input type="date" name="d" value="2026-11-28" required></label>
+    <label class="f">연결할 노션 업무<select class="f" name="link"><option value="">연결 안 함</option>${TASKS.filter(open).filter(t=>t.t).map(t=>`<option ${sel.link===t.p&&t.t.startsWith('사업보고')?'selected':''}>${t.t}</option>`).join('')}</select></label></div>
+    <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" checked style="width:20px;height:20px">담당자에게 슬랙 DM</label>
+    <div class="pillbar"><button class="btn pri">할 일로 보내기</button><button type="button" class="btn" id="refOnly">참고만 (액션 없음)</button></div></form>`
+   :`<div class="item" style="display:block"><b>액션</b> · ${esc(sel.action.t)} · ${sel.action.who} · ${md(sel.action.d)} ${dnum(sel.action.d)<0?'<span class="chip c-red">기한 지남</span>':''}</div>${sel.st==='doing'?'<button class="btn" id="mailDone">완료 처리</button>':''}`}`:'<div class="empty">왼쪽에서 메일을 고르세요</div>'}</section>
+ </div>`;
+};
+
+/* ========= 개발 메모 ========= */
+const MEMO = {
+ common:['공통',`<ul><li>필터·탭 상태는 URL 쿼리로 유지 (<code>?tab=progress&cat=정부지원과제&health=지연</code>) → 링크로 같은 화면 공유 가능, 홈 숫자 클릭도 이 쿼리로 이동</li><li>'보는 사람'(로그인 계정): 정미경=팀 전체, 그 외=본인 업무 기준. 노션 업무 DB의 담당자는 글자 선택지라 <b>로그인 이메일 ↔ 이름</b> 매핑 표 필요</li><li>색 규칙: 빨강=지남 · 주황=3일 이내 · 회색=그 외. 색은 상태에만</li><li>동기화: 노션 5분 캐시, 구글 iCal 15분 캐시, 상단에 마지막 동기화 시각 표시</li></ul>`],
+ home:[
+  ['오늘 상태 숫자 4개',`<ul><li><b>마감 지난 업무</b> = 업무 DB, 진행상태 ∉ {완료, 보류} AND (목표일정 end ?? start) &lt; 오늘 + 마감일 없이 시작 후 21일 넘은 프로젝트 → 클릭 시 진행 현황 <code>health=지연</code></li><li><b>7일 안 마감</b> = 같은 조건으로 0~7일 → 캘린더</li><li><b>오늘 일정</b> = 구글 캘린더 3개 + 업무 DB 목표일정=오늘</li><li><b>발행 막힌 콘텐츠</b> = 콘텐츠 DB 상태≠발행완료 AND (발행일 &lt; 오늘 OR 발행일 없음 OR 사진수급필요) → 콘텐츠</li></ul>`],
+  ['2주 안 중요 일정',`<ul><li>업무 DB 중요도=높음 AND 목표일정 end ∈ [오늘, 오늘+14]</li><li>가로 위치 = (end − 오늘)/14. 같은 날은 아래로 쌓음</li><li>시안에서는 중요도가 아직 비어 있어 주요 프로젝트 4개를 임의로 표시</li></ul>`],
+  ['주간목표 · 팔로업',`<ul><li>주간목표: Supabase <code>weekly_goals(week_start, title, owners, done)</code>, 전원 편집, 월요일 0시에 새 주. 체크하면 달성률 즉시 반영</li><li>팔로업: 위 '마감 지난 업무'를 담당자별 group by, 지난 일수 내림차순. 담당자 없는 업무는 '담당자 없음' 그룹</li></ul>`],
+  ['오늘·이번 주 흐름',`<ul><li>오늘 일정: 출처별 색(회사=파랑, 대표님=주황, 연차=회색, 노션=테두리)</li><li>콘텐츠: '준비 안 된 것'만 (사진수급필요, 발행일 없음)</li><li>결제 예정: 구독료 테이블 next_billing_date 이번 달</li></ul>`],
+  ['정부지원사업',`<ul><li>필터: 업무 DB 카테고리=정부지원과제 AND 구분=프로젝트 AND 진행상태 ∉ {완료, 보류}</li><li>정렬: 목표일정 end 오름차순</li><li><b>마감일</b> = 목표일정 end</li><li><b>현재 진행상황</b> = 하위 항목(relation) 완료 수/전체 + '이번 주 업데이트' 텍스트. 비어 있으면 가장 최근 완료된 하위 업무</li><li><b>앞으로 할 것</b> = 하위 항목 중 미완료, 날짜순. 지남=빨강, 제목 없음=주황</li><li>'노션에서 열기' = 프로젝트 페이지 URL</li></ul>`],
+  ['영업 활동',`<ul><li>노션 💼 영업활동 DB(<code>collection://424414e3-6631-8194-9a30-000b69eead25</code>)의 '단계'로 묶음</li><li>제안서 보내야 함 / 제안서 보냄 / 리드·컨택·미팅 / 성사 (드랍은 숨김)</li><li>빨강: 단계=제안서 보냄 AND 제안서 발송일+7 &lt; 오늘, 또는 다음 액션일 &lt; 오늘</li><li>현재 DB가 비어 있어 '예시 데이터로 보기' 토글만 있음</li></ul>`]],
+ calendar:[
+  ['출처 토글 · 사람 필터',`<ul><li>출처 칩 5개는 다중 토글(끄면 숨김). 기본 전부 켬, 선택은 localStorage에 저장</li><li>사람 필터: 노션은 담당자, 구글은 캘린더 소유/참석자, 연차는 제목의 이름 기준</li><li>정미경 개인일정 캘린더는 관리자만 보임</li></ul>`],
+  ['2주 달력',`<ul><li>회사 일정·연차인사·정미경 개인일정 = 비공개 iCal 3개</li><li>노션 업무 = 목표일정(기간이면 시작~끝), 완료는 취소선</li><li>프로젝트 end = 점선 '종료'</li><li>회사 일정 중 주최자 ≠ ceo@ 인 외부 초대는 관리자에게만</li></ul>`],
+  ['겹침·쏠림 자동 감지',`<ul><li><b>마감 쏠림</b>: 하루 마감(업무+프로젝트 종료) ≥ 5건</li><li><b>연차 겹침</b>: 연차 기간 ∩ 그 사람이 담당자인 업무 날짜</li><li><b>같은 날 몰림</b>: 한 사람 같은 날 마감 ≥ 2건</li><li>연차 제목 형식이 제각각('[종일/휴가]', '[휴가/종일]') → '[연차] 이름'으로 통일 권장</li></ul>`]],
+ progress:[
+  ['필터',`<ul><li>카테고리 칩(단일 선택) × 진행 상황 칩(단일 선택). 홈 숫자에서 오면 <code>health=지연</code></li></ul>`],
+  ['요약 숫자',`<ul><li>이번 주 끝낸 업무 = 완료로 바뀐 시점(last_edited_time 또는 별도 완료일 속성) ≥ 이번 주 월요일. 정확히 하려면 업무 DB에 '완료일' 속성 추가 권장</li></ul>`],
+  ['진행 상황 규칙 (카드 클릭 → 하위 업무 펼침)',`<ul><li><b>지연</b>: 지난 하위 업무 ≥1, 또는 마감일 없이 시작 후 21일 넘음</li><li><b>확인 필요</b>: 오늘 마감 · 하위 업무 0개 · 제목 없는 하위 업무 · 마감일도 다음 날짜도 없음</li><li><b>정상</b>: 그 외</li></ul>`],
+  ['노션 정리 필요',`<ul><li>담당자 빈 업무 · 제목 빈 업무 · end 없는 진행중 프로젝트 · '이번 주 업데이트' 빈 프로젝트</li><li>클릭 → 노션 필터 뷰 링크</li></ul>`]],
+ team:[
+  ['부하 막대',`<ul><li>사람별 미완료 업무 = 지남 / 7일 안 / 이후·날짜 없음. 공동 담당은 각자 1건씩</li><li>막대 길이는 가장 많은 사람 기준</li></ul>`],
+  ['사람 카드',`<ul><li>요일칸 연차 = 연차인사 캘린더에서 이름 매칭</li><li>이번 주 끝낸 일 = 완료일 ≥ 월요일</li></ul>`],
+  ['담당자 지정',`<ul><li>백오피스에서 노션에 <b>쓰는 유일한 곳</b>: 업무 DB 담당자 속성 PATCH</li><li>권한: 관리자만</li></ul>`]],
+ sales:[
+  ['요약',`<ul><li>필드 매핑: 업체명(title) · 단계(status) · 제안서 발송일 · 다음 액션 · 다음 액션일 · 최근 접촉일 · 예상 금액(₩) · 담당자(person) · 제안 내용 · 관련 업무(업무 DB relation)</li><li>예상 금액 합계 = 단계 ∉ {성사, 드랍}</li></ul>`],
+  ['단계별',`<ul><li>단계 그룹: 제안서 보내야 함 / 제안서 보냄 / 리드·컨택·미팅 / 성사. 드랍은 접어서</li><li>카드 안 정렬: 다음 액션일 오름차순</li><li>담당자는 노션 사용자(person) 타입 → 업무 DB(글자 선택지)와 매핑 방식이 다름</li></ul>`],
+  ['팔로업',`<ul><li>회신 없음: 단계=제안서 보냄 AND 발송일+7 &lt; 오늘</li><li>다음 액션일 &lt; 오늘</li><li>최근 접촉일 &lt; 오늘−30 (성사·드랍 제외)</li><li>매주 월 09:00 담당자에게 슬랙 DM</li></ul>`]],
+ content:[
+  ['요약',`<ul><li>노션 🖼️ 콘텐츠 캘린더(<code>collection://38e414e3-6631-800b-927f-000b9470e80f</code>) 읽기 전용</li><li>마지막 발행완료 = 상태=발행완료 중 max(발행일)</li></ul>`],
+  ['단계 막대 (클릭 → 필터)',`<ul><li>상태 5개 비율. 막대 클릭 시 아래 목록이 그 상태만</li></ul>`],
+  ['발행이 막힌 것',`<ul><li>상태≠발행완료 AND (발행일 &lt; 오늘 OR 발행일 없음 OR 사진수급필요). 지남 먼저</li></ul>`],
+  ['채널별',`<ul><li>카테고리 group by. 0건 채널은 빨간 숫자, 카테고리 없음=미분류</li></ul>`]],
+ subs:[
+  ['요약',`<ul><li>Supabase <code>subscriptions(name, cycle, next_billing_date, amount, card_last4, owner, status)</code></li><li>결제 3일 전 슬랙 #경영 (매일 09:00 cron)</li><li>결제일 지나면 next_billing_date 자동으로 다음 주기로</li></ul>`],
+  ['목록 · 추가',`<ul><li>추가 폼은 바로 저장(관리자만). 카드 번호는 끝 4자리만</li><li>상태 칩: 사용중 → 해지 검토 → 해지됨 (삭제 없이 이력)</li></ul>`]],
+ mail:[
+  ['상태 탭',`<ul><li>액션 없음 / 진행중 / 기한 지남 / 완료. '기한 지남' = 진행중 AND 액션 기한 &lt; 오늘</li></ul>`],
+  ['메일 목록',`<ul><li>share@ 공유 메일함을 Gmail API로 읽음. 전달한 사람 = 원래 받은 사람</li></ul>`],
+  ['메모 · 액션 만들기',`<ul><li><b>메모 두 종류</b>: ① 전달 메모 = 공유 주소로 전달할 때 본문 맨 위에 쓴 글(원문 구분선 위 텍스트를 잘라 저장). ② 백오피스 메모 = 상세 화면에서 덧붙이는 짧은 글, Supabase <code>mail_notes(mail_id, author, text, created_at)</code></li><li>저장 → Supabase <code>todos</code>에 생성(백오피스 할 일) + 선택 시 노션 업무와 relation</li><li>슬랙 DM 체크 시 담당자에게 알림</li><li>'참고만'은 완료 탭으로</li></ul>`]]
+};
+
+function renderMemo(){
+ const list = MEMO[state.screen]||[]; const body=document.getElementById('memoBody');
+ document.getElementById('memoTitle').textContent='개발 메모 · '+({home:'홈',calendar:'캘린더',progress:'진행 현황',team:'팀 현황',sales:'영업',content:'콘텐츠',subs:'구독료',mail:'메일 공유함'})[state.screen];
+ body.innerHTML = list.map((m,i)=>`<div class="mnote" data-note="${i+1}" tabindex="0"><b class="t"><span class="pin" style="display:inline-flex">${i+1}</span>${m[0]}</b>${m[1]}</div>`).join('') + `<div class="mnote" style="background:#FEF9C3"><b class="t">${MEMO.common[0]}</b>${MEMO.common[1]}</div>`;
+}
+
+/* ========= 렌더 & 이벤트 ========= */
+function render(){
+ document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('on',b.dataset.go===state.screen));
+ document.getElementById('view').innerHTML = V[state.screen]();
+ renderMemo();
+ const q=new URLSearchParams({tab:state.screen}); if(state.screen==='progress'){q.set('cat',state.prog.cat);q.set('health',state.prog.health);} history.replaceState(null,'','#'+q.toString());
+}
+const ALLOWED=['home','calendar'];
+function go(s,preset){ if(!ALLOWED.includes(s)){ toast('이 파일에는 홈·캘린더 화면만 들어 있어요'); return; } state.screen=s; if(s==='progress'&&preset){state.prog.health=preset;state.prog.cat='전체';} render(); window.scrollTo(0,0); }
+
+document.addEventListener('click',e=>{
+ const t=e.target.closest('button,[data-go]'); if(!t) return;
+ if(t.dataset.go){ go(t.dataset.go,t.dataset.preset); return; }
+ if(t.dataset.pin){ const n=t.dataset.pin; if(!document.getElementById('memo').classList.contains('open')) toggleMemo(true); const el=document.querySelector(`.mnote[data-note="${n}"]`); if(el){document.querySelectorAll('.mnote').forEach(x=>x.classList.remove('hl')); el.classList.add('hl'); el.scrollIntoView({behavior:'smooth',block:'center'});} return; }
+ if(t.dataset.src){ state.cal[t.dataset.src]=!state.cal[t.dataset.src]; render(); return; }
+ if(t.dataset.cat){ state.prog.cat=t.dataset.cat; render(); return; }
+ if(t.dataset.health){ state.prog.health=t.dataset.health; render(); return; }
+ if(t.dataset.proj){ state.prog.open = state.prog.open===t.dataset.proj?null:t.dataset.proj; render(); return; }
+ if(t.dataset.st){ state.content.st = state.content.st===t.dataset.st?null:t.dataset.st; render(); return; }
+ if(t.id==='stClear'){ state.content.st=null; render(); return; }
+ if(t.id==='exBtn'){ state.salesEx=!state.salesEx; render(); return; }
+ if(t.dataset.assign!==undefined){ const sel=document.getElementById('as'+t.dataset.assign); if(sel.selectedIndex>0){ const task=TASKS.filter(x=>!x.who.length&&x.t)[+t.dataset.assign]; task.who=[sel.value]; toast(`'${task.t}' 담당자를 ${sel.value}(으)로 지정했어요 · 실제로는 노션에 저장`); render(); } else toast('담당자를 먼저 고르세요'); return; }
+ if(t.dataset.subst!==undefined){ const s=state.subs[+t.dataset.subst]; s.st = {'사용중':'해지 검토','해지 검토':'해지됨','해지됨':'사용중'}[s.st]; render(); return; }
+ if(t.dataset.mtab){ state.mailTab=t.dataset.mtab; const f=state.mails.find(m=>state.mailTab==='over'?(m.st==='doing'&&m.action&&dnum(m.action.d)<0):m.st===state.mailTab); state.mailSel=f?f.id:null; render(); return; }
+ if(t.dataset.mail){ state.mailSel=+t.dataset.mail; render(); return; }
+ if(t.id==='refOnly'){ const m=state.mails.find(x=>x.id===state.mailSel); m.st='done'; m.action={t:'참고만',who:m.by,d:TODAY}; toast('완료 탭으로 옮겼어요'); render(); return; }
+ if(t.id==='mailDone'){ const m=state.mails.find(x=>x.id===state.mailSel); m.st='done'; toast('완료 처리했어요'); render(); return; }
+});
+document.addEventListener('change',e=>{
+ if(e.target.dataset.goal!==undefined){ state.goals[+e.target.dataset.goal].done=e.target.checked; render(); }
+ if(e.target.id==='calPerson'){ state.cal.person=e.target.value; render(); }
+ if(e.target.id==='role'){ state.role=e.target.value; render(); }
+});
+document.addEventListener('submit',e=>{
+ e.preventDefault(); const f=e.target;
+ if(f.id==='goalForm'){ const v=f.querySelector('input').value.trim(); if(v){ state.goals.push({t:v,who:state.role,done:false}); render(); } }
+ if(f.id==='subForm'){ const d=Object.fromEntries(new FormData(f)); state.subs.push({n:d.n,cyc:d.cyc,d:d.d?md(d.d):'[결제일]',amt:d.amt?Number(d.amt).toLocaleString('ko-KR')+'원':'[금액]',card:d.card?'법인카드 '+d.card:'[카드]',who:state.role,st:'사용중'}); toast(d.n+' 추가했어요'); render(); }
+ if(f.id==='noteForm'){ const v=f.querySelector('input').value.trim(); if(v){ const m=state.mails.find(x=>x.id===state.mailSel); (m.notes=m.notes||[]).push({who:state.role,t:v}); render(); } }
+ if(f.id==='actForm'){ const d=Object.fromEntries(new FormData(f)); const m=state.mails.find(x=>x.id===state.mailSel); m.st='doing'; m.action={t:d.t,who:d.who,d:d.d}; toast(`${d.who} 님 할 일로 보냈어요${d.link?' · 노션 업무와 연결':''} · 슬랙 DM`); state.mailTab='doing'; render(); }
+});
+function toggleMemo(force){ const m=document.getElementById('memo'), on = force!==undefined?force:!m.classList.contains('open'); m.classList.toggle('open',on); document.body.classList.toggle('memo-on',on); const b=document.getElementById('memoBtn'); b.setAttribute('aria-pressed',on); b.textContent=on?'개발 메모 닫기':'개발 메모 열기'; }
+document.getElementById('memoBtn').onclick=()=>toggleMemo();
+document.getElementById('memoClose').onclick=()=>toggleMemo(false);
+document.getElementById('memoBody').addEventListener('click',e=>{ const n=e.target.closest('.mnote[data-note]'); if(!n) return; const p=document.querySelector(`#view .pin[data-pin="${n.dataset.note}"]`); if(p){ const sec=p.closest('.sec')||p.closest('section')||p; sec.scrollIntoView({behavior:'smooth',block:'start'}); sec.classList.remove('flash'); void sec.offsetWidth; sec.classList.add('flash'); }});
+
+const h=new URLSearchParams(location.hash.slice(1)); if(h.get('tab')&&ALLOWED.includes(h.get('tab'))) { state.screen=h.get('tab'); if(h.get('cat')) state.prog.cat=h.get('cat'); if(h.get('health')) state.prog.health=h.get('health'); }
+render();
+</script>
+</body>
+</html>
