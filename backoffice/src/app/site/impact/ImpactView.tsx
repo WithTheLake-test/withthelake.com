@@ -10,11 +10,13 @@ import ItemPanel from "@/components/site/impact/ItemPanel";
 import type { PanelRequest } from "@/components/site/impact/types";
 import { useToast } from "@/components/Toast";
 import type { ImpactContent } from "@/generated/site-types";
-import { SAVE_LATER, loadSiteData } from "@/lib/site/data";
+import { ApiError, notifySaved, siteApi } from "@/lib/site/client";
+import { OFFLINE_NOTICE, loadSiteData } from "@/lib/site/data";
 import { EDITED_PATHS, IMPACT_TABS } from "@/lib/site/impact-schema";
 import { getIn, sameValue, setIn } from "@/lib/site/path";
 import { UploadsProvider, useUploads } from "@/lib/site/uploads";
 import { useUnsavedWarning } from "@/lib/site/useUnsavedWarning";
+import { validateImpact } from "@/lib/site/validate";
 
 export default function ImpactView() {
   return (
@@ -32,16 +34,56 @@ function ImpactEditor() {
   const [saved, setSaved] = useState<ImpactContent | null>(null);
   const [draft, setDraft] = useState<ImpactContent | null>(null);
   const [panel, setPanel] = useState<PanelRequest | null>(null);
+  const [live, setLive] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  const load = async () => {
+    const data = await loadSiteData();
+    setSaved(data.impact);
+    setDraft(data.impact);
+    setLive(data.live);
+  };
 
   useEffect(() => {
-    loadSiteData().then(({ impact }) => {
-      setSaved(impact);
-      setDraft(impact);
+    loadSiteData().then((data) => {
+      setSaved(data.impact);
+      setDraft(data.impact);
+      setLive(data.live);
     });
   }, []);
 
   const changed = saved && draft ? EDITED_PATHS.filter((p) => !sameValue(getIn(saved, p), getIn(draft, p))).length : 0;
   useUnsavedWarning(changed > 0);
+
+  const save = async () => {
+    if (!saved || !draft) return;
+    const problems = validateImpact(draft);
+    if (problems.length) {
+      setNotice(`필수 항목을 입력해 주세요: ${problems.join(" / ")}`);
+      return;
+    }
+    const changes = EDITED_PATHS.filter((p) => !sameValue(getIn(saved, p), getIn(draft, p))).map((path) => ({
+      path,
+      base: getIn(saved, path),
+      value: getIn(draft, path),
+    }));
+    setBusy(true);
+    setNotice("");
+    try {
+      await siteApi("impact", { method: "PUT", body: { changes, uploads: uploads.list() } });
+      uploads.clear();
+      setPanel(null);
+      toast("저장했습니다. 1~2분 뒤 홈페이지에 반영됩니다.");
+      notifySaved();
+      await load();
+    } catch (e) {
+      setNotice((e as Error).message);
+      if (!(e instanceof ApiError && e.conflict)) toast((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const revert = () => {
     if (!saved || !window.confirm("저장하지 않은 변경을 모두 되돌립니다.")) return;
@@ -62,13 +104,23 @@ function ImpactEditor() {
               <button type="button" onClick={revert} className={outlineButton}>
                 되돌리기
               </button>
-              <button type="button" onClick={() => toast(SAVE_LATER)} className={primaryButton}>
-                변경 사항 저장
+              <button type="button" onClick={save} disabled={busy || !live} className={`${primaryButton} disabled:opacity-40`}>
+                {busy ? "저장 중…" : "변경 사항 저장"}
               </button>
             </>
           )
         }
       />
+
+      {!live && <p className="mb-4 rounded-xl bg-soft px-5 py-3 text-muted">{OFFLINE_NOTICE}</p>}
+      {notice && (
+        <div className="mb-4 flex items-center justify-between gap-4 rounded-xl border border-danger/40 bg-white px-5 py-3 text-danger">
+          <span>{notice}</span>
+          <button type="button" onClick={() => window.location.reload()} className={outlineButton}>
+            최신 내용 불러오기
+          </button>
+        </div>
+      )}
 
       <nav className="mb-6 flex gap-1 overflow-x-auto border-b border-line">
         {IMPACT_TABS.map((t) => (

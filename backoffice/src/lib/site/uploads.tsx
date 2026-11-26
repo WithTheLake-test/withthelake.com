@@ -4,33 +4,31 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 /**
  * New images stay in the browser until saved, then get committed together with the post or impact data.
- * Large photos are shrunk to 2000px on the long side so the repository stays light.
+ * Photos are shrunk to 1600px wide JPG so the repository stays light.
  */
 export type PendingUpload = { path: string; base64: string; dataUrl: string };
 
-const MAX_SIDE = 2000;
+const MAX_WIDTH = 1600;
+
+// "Winter Foot.png" → "winter-foot"; names without latin letters or digits get a random one.
+function baseName(file: File) {
+  const name = file.name.replace(/\.[^.]+$/, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+  return name || Math.random().toString(36).slice(2, 8);
+}
 
 async function prepareImage(file: File): Promise<PendingUpload> {
-  const stamp = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-  const id = Math.random().toString(36).slice(2, 8);
-  const keepOriginal = file.type === "image/gif";
-  const dataUrl = keepOriginal ? await readAsDataUrl(file) : await resize(file);
-  const ext = keepOriginal ? "gif" : "jpg";
-  return { path: `public/uploads/${stamp}-${id}.${ext}`, base64: dataUrl.split(",")[1], dataUrl };
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
+  // A short suffix keeps two uploads of the same file name on the same day from overwriting each other.
+  const suffix = Math.random().toString(36).slice(2, 6);
+  const dataUrl = await toJpeg(file);
+  return { path: `public/uploads/${stamp}-${baseName(file)}-${suffix}.jpg`, base64: dataUrl.split(",")[1], dataUrl };
 }
 
-function readAsDataUrl(file: Blob) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("이미지를 읽을 수 없습니다."));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function resize(file: File) {
+// Shrinks to at most 1600px wide and re-encodes as JPG (transparent areas become white).
+async function toJpeg(file: File) {
   const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  const scale = Math.min(1, MAX_WIDTH / bitmap.width);
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);

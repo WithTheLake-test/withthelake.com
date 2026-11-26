@@ -9,6 +9,7 @@ import { useUser } from "@/lib/user";
 import Avatar from "./Avatar";
 import { outlineButton } from "./Button";
 import ExternalLink from "./ExternalLink";
+import DeployStatus from "./site/DeployStatus";
 import { useToast } from "./Toast";
 
 const MENU = [
@@ -106,10 +107,7 @@ export default function AppShell({ children }: { children: ReactNode }) {
         <header className="flex h-[60px] shrink-0 items-center justify-between border-b border-line bg-white px-7">
           {pathname.startsWith("/site") ? (
             <div className="flex items-center gap-3">
-              {/* Deploy status is connected together with saving. */}
-              <span className="text-muted">
-                홈페이지 반영 상태: <strong className="text-ink">연결 전</strong>
-              </span>
+              <DeployStatus />
               <ExternalLink href={HOMEPAGE_URL} className={outlineButton}>
                 홈페이지 열기
               </ExternalLink>

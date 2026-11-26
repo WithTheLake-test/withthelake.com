@@ -371,6 +371,16 @@ type AppData = { members: Member[]; tasks: Task[]; publishes: PublishItem[]; eve
   - 토큰은 이 저장소만 대상으로 하는 Fine-grained 토큰입니다.
   - 권한: Contents 읽기·쓰기, Commit statuses 읽기
 - **접근 제한 필수**: 홈페이지를 바꾸는 기능이므로, 저장 기능을 켜기 전에 Cloudflare Access를 반드시 설정합니다.
+- 구현 위치
+  - 저장 API: `backoffice/functions/api/site/` (`content`, `post`, `impact`, `asset`, `deploy-status`, `_middleware`)
+  - GitHub 연동과 재시도: `backoffice/src/server/`
+  - 끼워 넣기·저장 전 검사(화면과 서버가 함께 사용): `backoffice/src/lib/site/merge.ts`, `validate.ts`
+- 새 글은 자동 발행 스킬만 올립니다. 백오피스는 기존 글 수정·삭제와 성과 저장만 합니다. 글의 날짜를 바꿔도 `story.items` 안의 위치는 바뀌지 않습니다.
+- 토큰 권한에 Checks 읽기가 있어야 상단 '홈페이지 반영 상태'가 보입니다. (홈페이지 빌드 기록 `Cloudflare Pages: withthelake-test`를 읽음)
+- 로컬에서 저장까지 확인하는 방법 (`npm run dev`는 저장 API가 없어 빌드 시점 내용만 보여 주고 저장을 막습니다)
+  1. `backoffice/.dev.vars`에 `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH=save-test`
+  2. `cd backoffice && npm run build && ../node_modules/.bin/wrangler pages dev out --port 8788`
+  3. http://localhost:8788/site/posts 에서 저장
 
 ### 11-6. 진행 순서
 

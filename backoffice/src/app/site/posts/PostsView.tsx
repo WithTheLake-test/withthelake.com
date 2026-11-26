@@ -2,27 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { outlineButton, primaryButton } from "@/components/Button";
+import { outlineButton } from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import SiteImage from "@/components/site/SiteImage";
 import ToggleGroup from "@/components/ToggleGroup";
-import type { StoryContent } from "@/generated/site-types";
-import { loadSiteData } from "@/lib/site/data";
+import { OFFLINE_NOTICE, loadSiteData, type SiteData } from "@/lib/site/data";
 import { UploadsProvider } from "@/lib/site/uploads";
 
 const ALL = "all";
 
 export default function PostsView() {
-  const [story, setStory] = useState<StoryContent | null>(null);
+  const [data, setData] = useState<SiteData | null>(null);
   const [category, setCategory] = useState(ALL);
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    loadSiteData().then((data) => setStory(data.story));
+    loadSiteData().then(setData);
   }, []);
 
-  if (!story) return <p className="py-20 text-center text-muted">불러오는 중</p>;
+  if (!data) return <p className="py-20 text-center text-muted">불러오는 중</p>;
 
+  const { story } = data;
   const keyword = query.trim().toLowerCase();
   const posts = [...story.items]
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -34,12 +34,8 @@ export default function PostsView() {
       <PageHeader
         title="게시물 (STORY)"
         description="홈페이지 STORY 메뉴에 보이는 글을 관리합니다. 저장하면 1~2분 뒤 홈페이지에 반영됩니다."
-        actions={
-          <Link href="/site/posts/edit" className={primaryButton}>
-            + 새 글 쓰기
-          </Link>
-        }
       />
+      {!data.live && <p className="mb-4 rounded-xl bg-soft px-5 py-3 text-muted">{OFFLINE_NOTICE}</p>}
 
       <div className="mb-4 flex items-center justify-between gap-4">
         <ToggleGroup
@@ -105,7 +101,7 @@ export default function PostsView() {
       </section>
 
       <p className="mt-5 rounded-xl bg-soft px-5 py-3 text-muted">
-        자동 발행으로 올라온 글도 이 목록에 함께 표시됩니다. &apos;홈 노출&apos;을 켠 글은 홈페이지 첫 화면 STORY 영역에 보입니다.
+        새 글은 자동 발행으로만 올라오며, 이 목록에서 수정하거나 삭제할 수 있습니다. &apos;홈 노출&apos;을 켠 글은 홈페이지 첫 화면 STORY 영역에 보입니다.
       </p>
     </UploadsProvider>
   );
