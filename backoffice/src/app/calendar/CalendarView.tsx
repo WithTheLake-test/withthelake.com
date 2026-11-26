@@ -6,29 +6,22 @@ import Checkbox from "@/components/Checkbox";
 import MemberDropdown from "@/components/MemberDropdown";
 import MonthCalendar, { MonthNav } from "@/components/MonthCalendar";
 import PageHeader from "@/components/PageHeader";
-import { TaskCreateForm } from "@/components/TaskForm";
 import ToggleGroup from "@/components/ToggleGroup";
-import type { CalendarEvent, Task } from "@/lib/data/types";
+import type { CalendarEvent, PublishItem, Task } from "@/lib/data/types";
 import { TODAY, monthOf, timeLabel } from "@/lib/date";
-import { useData, useStoreActions } from "@/lib/store";
-import { isDone, isOverdue, newTaskDraft } from "@/lib/tasks";
+import { CATEGORY_SHORT, isPublished, needsPhoto } from "@/lib/publishes";
+import { useData } from "@/lib/store";
+import { isDone, isOverdue, matchesAssignees } from "@/lib/tasks";
 import { useUser } from "@/lib/user";
 import DayDetail from "./DayDetail";
 
-type Kind = "all" | "event" | "task";
+type Kind = "all" | "event" | "task" | "publish";
 
 const CELL_LIMIT = 3;
 
 const byTime = (a: CalendarEvent, b: CalendarEvent) => (a.time ?? "").localeCompare(b.time ?? "");
 
-function TaskLine({ task }: { task: Task }) {
-  const done = isDone(task);
-  return (
-    <div className={`truncate px-1 text-sm ${done ? "text-faint line-through" : isOverdue(task) ? "text-danger" : ""}`}>
-      {done ? "☑" : "☐"} {task.title}
-    </div>
-  );
-}
+const toneOf = (faded: boolean, alert: boolean) => (faded ? "text-faint" : alert ? "text-danger" : "");
 
 function EventChip({ event }: { event: CalendarEvent }) {
   return (
@@ -39,31 +32,50 @@ function EventChip({ event }: { event: CalendarEvent }) {
   );
 }
 
+function TaskLine({ task }: { task: Task }) {
+  return (
+    <div className={`truncate px-1 text-sm ${toneOf(isDone(task), isOverdue(task))} ${isDone(task) ? "line-through" : ""}`}>
+      ● {task.title}
+    </div>
+  );
+}
+
+function PublishChip({ item }: { item: PublishItem }) {
+  return (
+    <div className={`truncate rounded border border-dashed border-faint/70 px-2 py-0.5 text-sm ${toneOf(isPublished(item), needsPhoto(item))}`}>
+      {CATEGORY_SHORT[item.category]} · {item.title}
+    </div>
+  );
+}
+
 export default function CalendarView() {
-  const { user, members } = useUser();
-  const { events, tasks } = useData();
-  const { toggleTaskDone } = useStoreActions();
+  const { members } = useUser();
+  const { events, tasks, publishes } = useData();
   const [month, setMonth] = useState(monthOf(TODAY));
   const [selectedDate, setSelectedDate] = useState(TODAY);
-  const [creating, setCreating] = useState(false);
   const [kind, setKind] = useState<Kind>("all");
   const [memberIds, setMemberIds] = useState(() => members.map((member) => member.id));
   const [hideDone, setHideDone] = useState(false);
 
   const everyone = memberIds.length === members.length;
-  const visibleEvents =
-    kind === "task" ? [] : events.filter((event) => event.ownerId === "all" || memberIds.includes(event.ownerId)).sort(byTime);
-  const visibleTasks =
-    kind === "event"
-      ? []
-      : tasks.filter(
-          (task) => (task.assigneeId ? memberIds.includes(task.assigneeId) : everyone) && !(hideDone && isDone(task)),
-        );
+  const show = (k: Kind) => kind === "all" || kind === k;
+  const visibleEvents = show("event")
+    ? events.filter((event) => event.ownerId === "all" || memberIds.includes(event.ownerId)).sort(byTime)
+    : [];
+  const visibleTasks = show("task")
+    ? tasks.filter((task) => task.due && matchesAssignees(task.assigneeIds, memberIds, everyone) && !(hideDone && isDone(task)))
+    : [];
+  const visiblePublishes = show("publish")
+    ? publishes.filter(
+        (item) => item.date && matchesAssignees(item.assigneeIds, memberIds, everyone) && !(hideDone && isPublished(item)),
+      )
+    : [];
 
-  const dayItems = (date: string) => [
-    ...visibleEvents.filter((event) => event.date === date).map((event) => <EventChip key={event.id} event={event} />),
-    ...visibleTasks.filter((task) => task.due === date).map((task) => <TaskLine key={task.id} task={task} />),
-  ];
+  const onDate = (date: string) => ({
+    events: visibleEvents.filter((event) => event.date === date),
+    tasks: visibleTasks.filter((task) => task.due === date),
+    publishes: visiblePublishes.filter((item) => item.date === date),
+  });
 
   // Moving to another month selects its first day; coming back to this month selects today.
   const changeMonth = (next: string) => {
@@ -75,7 +87,7 @@ export default function CalendarView() {
     <>
       <PageHeader
         title="캘린더"
-        description="회사 일정과 업무 마감일을 한 달력에서 확인합니다."
+        description="회사 일정, 업무 마감일, 발행 예정일을 한 달력에서 확인합니다."
         actions={
           <>
             <MonthNav month={month} onChange={changeMonth} />
@@ -94,6 +106,7 @@ export default function CalendarView() {
               { value: "all", label: "전체" },
               { value: "event", label: "일정" },
               { value: "task", label: "업무" },
+              { value: "publish", label: "발행" },
             ]}
             value={kind}
             onChange={setKind}
@@ -101,15 +114,18 @@ export default function CalendarView() {
           <span className="h-6 w-px bg-line" />
           <MemberDropdown value={memberIds} onChange={setMemberIds} />
           <div className="ml-auto">
-            <Checkbox label="완료된 업무 숨기기" showLabel checked={hideDone} onChange={() => setHideDone((v) => !v)} />
+            <Checkbox label="완료된 항목 숨기기" showLabel checked={hideDone} onChange={() => setHideDone((v) => !v)} />
           </div>
         </div>
         <div className="mt-3 flex items-center gap-6 text-sm text-muted">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-3.5 w-6 rounded bg-soft" /> 일정
+            <span className="inline-block h-3.5 w-6 rounded bg-soft" /> 일정 (구글 캘린더)
           </span>
-          <span>☐ 업무 (완료 시 ☑)</span>
-          <span className="text-danger">빨간 글씨 = 마감 지남</span>
+          <span>● 업무 마감일 (노션)</span>
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block h-3.5 w-6 rounded border border-dashed border-faint/70" /> 발행 예정 (노션)
+          </span>
+          <span className="text-danger">빨간 글씨: 마감 지남, 사진 필요</span>
         </div>
       </div>
 
@@ -119,7 +135,12 @@ export default function CalendarView() {
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           renderDay={(date) => {
-            const items = dayItems(date);
+            const day = onDate(date);
+            const items = [
+              ...day.events.map((event) => <EventChip key={event.id} event={event} />),
+              ...day.tasks.map((task) => <TaskLine key={task.id} task={task} />),
+              ...day.publishes.map((item) => <PublishChip key={item.id} item={item} />),
+            ];
             if (items.length <= CELL_LIMIT) return items;
             return [
               ...items.slice(0, CELL_LIMIT - 1),
@@ -129,22 +150,7 @@ export default function CalendarView() {
             ];
           }}
         />
-        {creating ? (
-          <TaskCreateForm
-            key={selectedDate}
-            defaults={newTaskDraft({ status: "todo", assigneeId: user.id, due: selectedDate })}
-            onCancel={() => setCreating(false)}
-            onCreated={() => setCreating(false)}
-          />
-        ) : (
-          <DayDetail
-            date={selectedDate}
-            events={visibleEvents.filter((event) => event.date === selectedDate)}
-            tasks={visibleTasks.filter((task) => task.due === selectedDate)}
-            onToggleTask={toggleTaskDone}
-            onAddTask={() => setCreating(true)}
-          />
-        )}
+        <DayDetail date={selectedDate} {...onDate(selectedDate)} />
       </div>
     </>
   );
