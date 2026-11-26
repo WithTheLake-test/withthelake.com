@@ -37,6 +37,7 @@ function buildColumns(site: SiteSettings) {
         { label: "힐링로드 ON", href: "/healing" },
         { label: "맨발걷기 정보", href: "/info" },
         { label: "NEWS", href: "/story?category=NEWS" },
+        { label: "CONTENTS", href: "/story?category=CONTENTS" },
       ],
     },
     {
