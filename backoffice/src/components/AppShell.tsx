@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore, type ReactNode } from "react";
-import { timeLabel } from "@/lib/date";
-import { useStoreActions } from "@/lib/store";
+import type { ReactNode } from "react";
+import { useReload } from "@/lib/store";
 import { useUser } from "@/lib/user";
 import Avatar from "./Avatar";
 import { outlineButton } from "./Button";
-import { CONNECT_LATER, useToast } from "./Toast";
+import { useToast } from "./Toast";
 
 const MENU = [
   { label: "홈", href: "/" },
@@ -20,17 +19,6 @@ const MENU = [
 const UPCOMING_MENU = "영업, 경영지원, 메일 공유, 설정";
 
 const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
-
-// Time the page was opened, read once in the browser (empty during prerender).
-let openedAt: string | undefined;
-const readOpenedAt = () => {
-  if (!openedAt) {
-    const now = new Date();
-    openedAt = timeLabel(`${now.getHours()}:${now.getMinutes()}`);
-  }
-  return openedAt;
-};
-const subscribeNever = () => () => {};
 
 function UserSelect() {
   const { user, members, setUser } = useUser();
@@ -56,30 +44,15 @@ function UserSelect() {
   );
 }
 
-function TrialNotice() {
-  const { reset } = useStoreActions();
-  const toast = useToast();
-
-  const onReset = async () => {
-    if (!window.confirm("체험용 데이터를 처음 상태로 되돌립니다. 바꾼 내용은 모두 사라집니다.")) return;
-    await reset();
-    toast("체험용 데이터를 처음 상태로 되돌렸습니다.");
-  };
-
-  return (
-    <div className="mb-5 border-b border-line px-2.5 pb-5 text-sm text-faint">
-      <p>체험판 · 바꾼 내용은 이 브라우저에만 저장됩니다</p>
-      <button type="button" onClick={onReset} className="mt-1.5 text-muted underline underline-offset-2 hover:text-ink">
-        체험용 데이터 초기화
-      </button>
-    </div>
-  );
-}
-
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const toast = useToast();
-  const opened = useSyncExternalStore(subscribeNever, readOpenedAt, () => "");
+  const { loadedAt, reload } = useReload();
+
+  const refresh = async () => {
+    await reload();
+    toast("최신 내용을 불러왔습니다.");
+  };
 
   return (
     <div className="flex min-h-screen min-w-[1280px]">
@@ -104,7 +77,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
             ))}
           </ul>
         </nav>
-        <TrialNotice />
         <div className="px-2.5 text-sm leading-relaxed text-muted">
           <p>다음에 추가될 메뉴</p>
           <p>{UPCOMING_MENU}</p>
@@ -114,8 +86,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-[60px] shrink-0 items-center justify-between border-b border-line bg-white px-7">
           <div className="flex items-center gap-3">
-            <span className="text-muted">최종 업데이트 {opened}</span>
-            <button type="button" onClick={() => toast(CONNECT_LATER.refresh)} className={outlineButton}>
+            <span className="text-muted">노션·구글 캘린더 최종 업데이트 {loadedAt}</span>
+            <button type="button" onClick={refresh} className={outlineButton}>
               새로고침
             </button>
           </div>

@@ -1,78 +1,64 @@
 "use client";
 
 import { useState } from "react";
-import { primaryButton } from "@/components/Button";
+import { outlineButton } from "@/components/Button";
 import Checkbox from "@/components/Checkbox";
 import { SelectDropdown } from "@/components/Dropdown";
+import ExternalLink from "@/components/ExternalLink";
 import MemberDropdown from "@/components/MemberDropdown";
 import PageHeader from "@/components/PageHeader";
-import { TaskCreateForm } from "@/components/TaskForm";
-import { TASK_STATUSES, type TaskStatus } from "@/lib/data/types";
-import { TODAY, addDays } from "@/lib/date";
-import { useData, useStoreActions } from "@/lib/store";
-import { STATUS_LABEL, byDue, doneDate, isDone, isOverdue, newTaskDraft } from "@/lib/tasks";
+import { TASK_CATEGORIES, TASK_KINDS, TASK_STATUSES, type TaskStatus } from "@/lib/data/types";
+import { NOTION_TASKS_URL } from "@/lib/links";
+import { useData } from "@/lib/store";
+import { byDue, isDone, isOverdue, matchesAssignees, recentlyDone } from "@/lib/tasks";
 import { useUser } from "@/lib/user";
 import TaskCard from "./TaskCard";
 import TaskDetail from "./TaskDetail";
 
-const COLUMN_NOTE: Partial<Record<TaskStatus, string>> = { review: "검토, 결재 대기", done: "최근 2주" };
-const DONE_FROM = addDays(TODAY, -14);
+const COLUMN_NOTE: Record<TaskStatus, string> = { 준비: "시작 전", 진행중: "진행 중인 업무", 완료: "최근 2주" };
+const ALL = "all";
 
-type Panel = { kind: "detail"; id: string } | { kind: "create"; status: TaskStatus } | null;
+const withAll = (values: readonly string[]) => [{ value: ALL, label: "전체" }, ...values.map((value) => ({ value, label: value }))];
 
-// Remount per user so the assignee filter defaults to the current user.
 export default function ProgressView() {
-  const { user } = useUser();
-  return <ProgressBoard key={user.id} />;
-}
-
-function ProgressBoard() {
-  const { user } = useUser();
-  const { tasks, meetings } = useData();
-  const { updateTask } = useStoreActions();
+  const { members } = useUser();
+  const { tasks } = useData();
   const [query, setQuery] = useState("");
-  const [memberIds, setMemberIds] = useState([user.id]);
-  const [meetingId, setMeetingId] = useState("all");
+  const [memberIds, setMemberIds] = useState(() => members.map((member) => member.id));
+  const [category, setCategory] = useState(ALL);
+  const [projectId, setProjectId] = useState(ALL);
+  const [kind, setKind] = useState(ALL);
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [importantOnly, setImportantOnly] = useState(false);
-  const [unassignedOnly, setUnassignedOnly] = useState(false);
-  const [panel, setPanel] = useState<Panel>(null);
-  const [draggingId, setDraggingId] = useState<string>();
-  const [dropStatus, setDropStatus] = useState<TaskStatus>();
+  const [selectedId, setSelectedId] = useState<string>();
 
+  const projects = tasks.filter((task) => tasks.some((t) => t.parentId === task.id));
+  const everyone = memberIds.length === members.length;
   const keyword = query.trim().toLowerCase();
   const visible = tasks
     .filter(
       (task) =>
         task.title.toLowerCase().includes(keyword) &&
-        (unassignedOnly ? !task.assigneeId : !!task.assigneeId && memberIds.includes(task.assigneeId)) &&
-        (meetingId === "all" || task.meetingId === meetingId) &&
+        matchesAssignees(task.assigneeIds, memberIds, everyone) &&
+        (category === ALL || task.category === category) &&
+        (projectId === ALL || task.id === projectId || task.parentId === projectId) &&
+        (kind === ALL || task.kind === kind) &&
         (!overdueOnly || isOverdue(task)) &&
         (!importantOnly || task.important) &&
-        (!isDone(task) || doneDate(task) >= DONE_FROM),
+        (!isDone(task) || recentlyDone(task, 14)),
     )
     .sort(byDue);
-  const selected = panel?.kind === "detail" ? tasks.find((task) => task.id === panel.id) : undefined;
-
-  const endDrag = () => {
-    setDraggingId(undefined);
-    setDropStatus(undefined);
-  };
-  const dropOn = (status: TaskStatus) => {
-    const task = tasks.find((t) => t.id === draggingId);
-    endDrag();
-    if (task && task.status !== status) updateTask(task.id, { status });
-  };
+  const selected = tasks.find((task) => task.id === selectedId);
 
   return (
     <>
       <PageHeader
         title="진행 현황"
-        description="회의에서 정한 업무의 담당자, 마감일, 진행 상태를 관리합니다."
+        description="노션 업무 표의 진행 상태를 담당자, 마감일 기준으로 확인합니다."
         actions={
-          <button type="button" onClick={() => setPanel({ kind: "create", status: "todo" })} className={primaryButton}>
-            + 업무 추가
-          </button>
+          <ExternalLink href={NOTION_TASKS_URL} className={outlineButton}>
+            노션에서 업무 추가
+          </ExternalLink>
         }
       />
 
@@ -82,92 +68,49 @@ function ProgressBoard() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="업무명 검색"
-          className="h-[38px] w-56 rounded-lg border border-line bg-white px-3 outline-none focus:border-ink"
+          className="h-[38px] w-52 rounded-lg border border-line bg-white px-3 outline-none focus:border-ink"
         />
-        <MemberDropdown value={memberIds} onChange={setMemberIds} className="min-w-44" />
+        <MemberDropdown value={memberIds} onChange={setMemberIds} />
+        <SelectDropdown label="카테고리" value={category} options={withAll(TASK_CATEGORIES)} onChange={setCategory} />
         <SelectDropdown
-          label="관련 회의"
-          value={meetingId}
-          options={[{ value: "all", label: "전체" }, ...meetings.map((m) => ({ value: m.id, label: m.title }))]}
-          onChange={setMeetingId}
-          className="min-w-44"
+          label="프로젝트"
+          value={projectId}
+          options={[{ value: ALL, label: "전체" }, ...projects.map((p) => ({ value: p.id, label: p.title }))]}
+          onChange={setProjectId}
         />
+        <SelectDropdown label="구분" value={kind} options={withAll(TASK_KINDS)} onChange={setKind} />
         <Checkbox label="마감 지난 업무만" showLabel checked={overdueOnly} onChange={() => setOverdueOnly((v) => !v)} />
         <Checkbox label="중요 업무만" showLabel checked={importantOnly} onChange={() => setImportantOnly((v) => !v)} />
-        <Checkbox label="담당자 미지정만" showLabel checked={unassignedOnly} onChange={() => setUnassignedOnly((v) => !v)} />
       </div>
 
-      <div className="grid grid-cols-[repeat(4,minmax(0,1fr))_300px] items-start gap-4">
+      <div className="grid grid-cols-[repeat(3,minmax(0,1fr))_340px] items-start gap-4">
         {TASK_STATUSES.map((status) => {
           const column = visible.filter((task) => task.status === status);
           return (
-            <section
-              key={status}
-              data-column={status}
-              onDragOver={(e) => {
-                if (!draggingId) return;
-                e.preventDefault();
-                setDropStatus(status);
-              }}
-              onDragLeave={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) setDropStatus(undefined);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                dropOn(status);
-              }}
-              className={`rounded-xl bg-soft p-3 ${dropStatus === status ? "outline-2 outline-ink" : ""}`}
-            >
+            <section key={status} data-column={status} className="rounded-xl bg-soft p-3">
               <div className="mb-3 px-1">
                 <h2 className="text-base font-bold">
-                  {STATUS_LABEL[status]} <span className="font-normal text-muted">{column.length}</span>
+                  {status} <span className="font-normal text-muted">{column.length}</span>
                 </h2>
-                {COLUMN_NOTE[status] && <p className="text-sm text-muted">{COLUMN_NOTE[status]}</p>}
+                <p className="text-sm text-muted">{COLUMN_NOTE[status]}</p>
               </div>
               <ul className="space-y-2.5">
                 {column.map((task) => (
                   <li key={task.id}>
-                    <TaskCard
-                      task={task}
-                      selected={task.id === selected?.id}
-                      dragging={task.id === draggingId}
-                      onSelect={() => setPanel({ kind: "detail", id: task.id })}
-                      onDragStart={() => setDraggingId(task.id)}
-                      onDragEnd={endDrag}
-                    />
+                    <TaskCard task={task} selected={task.id === selectedId} onSelect={() => setSelectedId(task.id)} />
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                onClick={() => setPanel({ kind: "create", status })}
-                className="mt-3 px-1 text-muted hover:text-ink"
-              >
-                + 업무 추가
-              </button>
+              {column.length === 0 && <p className="px-1 py-4 text-sm text-muted">해당 업무 없음</p>}
             </section>
           );
         })}
-
-        {panel?.kind === "create" ? (
-          <TaskCreateForm
-            key={panel.status}
-            defaults={newTaskDraft({ status: panel.status, assigneeId: user.id, due: TODAY })}
-            onCancel={() => setPanel(null)}
-            onCreated={(task) => setPanel({ kind: "detail", id: task.id })}
-          />
-        ) : (
-          <TaskDetail
-            task={selected}
-            hiddenByFilter={!!selected && !visible.some((task) => task.id === selected.id)}
-            onDeleted={() => setPanel(null)}
-          />
-        )}
+        <TaskDetail task={selected} />
       </div>
 
       <p className="mt-5 rounded-xl bg-soft px-5 py-3 text-muted">
-        업무 카드를 누르면 오른쪽에서 진행 상태, 담당자, 마감일을 변경할 수 있습니다. 카드를 다른 열로 끌어 놓으면 진행 상태가
-        바뀝니다.
+        이 화면은 확인용입니다. 업무 추가와 수정은 노션에서 하고, 바꾼 내용은 몇 분 안에 반영됩니다. 바로 확인하려면 상단 새로고침을
+        누르세요.
       </p>
     </>
   );

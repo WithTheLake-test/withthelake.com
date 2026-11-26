@@ -1,16 +1,27 @@
 "use client";
 
-import { TaskFields } from "@/components/TaskForm";
-import { CONNECT_LATER, useToast } from "@/components/Toast";
+import type { ReactNode } from "react";
+import Assignees from "@/components/Assignees";
+import { primaryButton } from "@/components/Button";
+import DueLabel from "@/components/DueLabel";
+import ExternalLink from "@/components/ExternalLink";
 import type { Task } from "@/lib/data/types";
-import { useStoreActions } from "@/lib/store";
-import { ImportantBadge } from "./TaskCard";
+import { fullDate } from "@/lib/date";
+import { useData } from "@/lib/store";
+import { byDue, isDone } from "@/lib/tasks";
+import { TaskBadges } from "./TaskCard";
 
-type Props = { task?: Task; hiddenByFilter: boolean; onDeleted: () => void };
+function Row({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex gap-4 border-t border-line py-3">
+      <span className="w-20 shrink-0 text-sm text-muted">{label}</span>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
 
-export default function TaskDetail({ task, hiddenByFilter, onDeleted }: Props) {
-  const { updateTask, deleteTask } = useStoreActions();
-  const toast = useToast();
+export default function TaskDetail({ task }: { task?: Task }) {
+  const { tasks } = useData();
 
   if (!task) {
     return (
@@ -20,30 +31,49 @@ export default function TaskDetail({ task, hiddenByFilter, onDeleted }: Props) {
     );
   }
 
-  const remove = async () => {
-    if (!window.confirm(`'${task.title}' 업무를 삭제합니다.`)) return;
-    await deleteTask(task.id);
-    onDeleted();
-    toast("업무를 삭제했습니다.");
-  };
+  const parent = tasks.find((t) => t.id === task.parentId);
+  // The project's own sub-tasks, or the sub-tasks this task belongs with.
+  const projectId = parent?.id ?? (tasks.some((t) => t.parentId === task.id) ? task.id : undefined);
+  const siblings = projectId ? tasks.filter((t) => t.parentId === projectId).sort(byDue) : [];
 
   return (
     <aside className="rounded-xl border border-line bg-white px-6 py-5">
-      {hiddenByFilter && (
-        <p className="mb-3 rounded-lg bg-soft px-3 py-2 text-sm text-muted">필터 조건에 맞지 않아 목록에서 빠졌습니다.</p>
+      <TaskBadges task={task} />
+      <h2 className="mt-2 mb-4 text-lg font-bold">{task.title}</h2>
+
+      <Row label="진행상태">{task.status}</Row>
+      <Row label="담당자">
+        <Assignees ids={task.assigneeIds} className="block" />
+      </Row>
+      <Row label="목표일정">
+        {task.start && task.due && task.start !== task.due && <span>{fullDate(task.start)} ~ </span>}
+        <DueLabel task={task} date="full" />
+      </Row>
+      <Row label="프로젝트">{parent?.title ?? (projectId ? task.title : "없음")}</Row>
+      <Row label="카테고리">{task.category}</Row>
+      {task.meetingTitle && <Row label="회의록">{task.meetingTitle}</Row>}
+      {task.partner && <Row label="주관·파트너">{task.partner}</Row>}
+      {task.memo && <Row label="메모">{task.memo}</Row>}
+
+      {siblings.length > 0 && (
+        <div className="border-t border-line pt-3">
+          <p className="mb-2 text-sm text-muted">
+            같은 프로젝트 업무 ({siblings.length}건 중 {siblings.filter(isDone).length}건 완료)
+          </p>
+          <ul className="space-y-1.5">
+            {siblings.map((t) => (
+              <li key={t.id} className={`flex gap-3 ${isDone(t) ? "text-faint" : ""}`}>
+                <span className="w-12 shrink-0 text-sm">{t.status}</span>
+                <span className={`min-w-0 flex-1 truncate ${t.id === task.id ? "font-bold" : ""}`}>{t.title}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
-      <div className="mb-2 flex min-h-6 items-center justify-between">
-        <span>{task.important && <ImportantBadge />}</span>
-        <button type="button" onClick={() => toast(CONNECT_LATER.notion)} className="text-muted hover:text-ink">
-          노션에서 보기 ↗
-        </button>
-      </div>
-      <TaskFields key={task.id} value={task} onChange={(patch) => updateTask(task.id, patch)} />
-      <div className="border-t border-line pt-4">
-        <button type="button" onClick={remove} className="text-muted underline underline-offset-2 hover:text-ink">
-          업무 삭제
-        </button>
-      </div>
+
+      <ExternalLink href={task.notionUrl} className={`${primaryButton} mt-5 w-full`}>
+        노션에서 열기
+      </ExternalLink>
     </aside>
   );
 }

@@ -1,79 +1,50 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import * as repo from "./data";
-import type { AppData, NewTask, Task, TaskStatus } from "./data/types";
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { loadData } from "./data";
+import type { AppData } from "./data/types";
+import { nowTimeLabel } from "./date";
 
-type Actions = {
-  reload: () => Promise<void>;
-  addTask: (input: NewTask) => Promise<Task>;
-  updateTask: (id: string, patch: Partial<NewTask>) => Promise<void>;
-  toggleTaskDone: (task: Task) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
-  setGoalDone: (id: string, done: boolean) => Promise<void>;
-  reset: () => Promise<void>;
-};
+type StoreValue = { data: AppData | null; loadedAt: string; reload: () => Promise<void> };
 
-const DataContext = createContext<AppData | null>(null);
-const ActionsContext = createContext<Actions | null>(null);
+const StoreContext = createContext<StoreValue | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<AppData | null>(null);
-  // Status to restore when a task is unchecked again in this session.
-  const statusBeforeDone = useRef(new Map<string, TaskStatus>());
+  const [state, setState] = useState<{ data: AppData; loadedAt: string } | null>(null);
 
-  const actions = useMemo<Actions>(() => {
-    const reload = async () => setData(await repo.loadData());
-    const thenReload = async <T,>(operation: Promise<T>) => {
-      const result = await operation;
-      await reload();
-      return result;
-    };
-
-    return {
-      reload,
-      addTask: (input) => thenReload(repo.addTask(input)),
-      updateTask: (id, patch) => thenReload(repo.updateTask(id, patch)),
-      toggleTaskDone: (task) => {
-        if (task.status === "done") {
-          return thenReload(repo.updateTask(task.id, { status: statusBeforeDone.current.get(task.id) ?? "todo" }));
-        }
-        statusBeforeDone.current.set(task.id, task.status);
-        return thenReload(repo.updateTask(task.id, { status: "done" }));
-      },
-      deleteTask: (id) => thenReload(repo.deleteTask(id)),
-      setGoalDone: (id, done) => thenReload(repo.updateWeeklyGoal(id, { done })),
-      reset: () => thenReload(repo.resetData()),
-    };
+  const reload = useCallback(async () => {
+    const data = await loadData();
+    setState({ data, loadedAt: nowTimeLabel() });
   }, []);
 
   useEffect(() => {
-    actions.reload();
-    return repo.subscribeData(actions.reload);
-  }, [actions]);
+    loadData().then((data) => setState({ data, loadedAt: nowTimeLabel() }));
+  }, []);
 
   return (
-    <ActionsContext value={actions}>
-      <DataContext value={data}>{children}</DataContext>
-    </ActionsContext>
+    <StoreContext value={{ data: state?.data ?? null, loadedAt: state?.loadedAt ?? "", reload }}>{children}</StoreContext>
   );
 }
 
-// Data depends on this browser's storage and today's date, so screens render only after it loads.
+function useStoreContext() {
+  const value = useContext(StoreContext);
+  if (!value) throw new Error("Store hooks must be used inside StoreProvider");
+  return value;
+}
+
+// Data depends on today's date in the browser, so screens render only after it loads.
 export function StoreReady({ children }: { children: ReactNode }) {
-  const data = useContext(DataContext);
-  if (!data) return <p className="py-20 text-center text-muted">불러오는 중</p>;
+  if (!useStoreContext().data) return <p className="py-20 text-center text-muted">불러오는 중</p>;
   return children;
 }
 
 export function useData() {
-  const data = useContext(DataContext);
+  const { data } = useStoreContext();
   if (!data) throw new Error("useData must be used inside StoreReady");
   return data;
 }
 
-export function useStoreActions() {
-  const actions = useContext(ActionsContext);
-  if (!actions) throw new Error("useStoreActions must be used inside StoreProvider");
-  return actions;
+export function useReload() {
+  const { loadedAt, reload } = useStoreContext();
+  return { loadedAt, reload };
 }

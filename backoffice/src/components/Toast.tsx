@@ -2,12 +2,6 @@
 
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
 
-export const CONNECT_LATER = {
-  notion: "노션 연결 후 사용할 수 있습니다.",
-  calendar: "구글 캘린더 연결 후 사용할 수 있습니다.",
-  refresh: "노션·구글 캘린더 연결 후 최신 내용을 불러옵니다.",
-};
-
 const ToastContext = createContext<(message: string) => void>(() => {});
 
 export function ToastProvider({ children }: { children: ReactNode }) {
