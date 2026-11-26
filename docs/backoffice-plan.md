@@ -272,7 +272,14 @@ type AppData = { members: Member[]; tasks: Task[]; publishes: PublishItem[]; eve
 - 주소가 바뀔 때 고칠 곳
   - 백오피스 주소(예: `admin.withthelake.com`): `public/_redirects`의 두 줄, 위 '배포 주소'. `_redirects`는 Cloudflare가 직접 읽는 정적 파일이라 상수를 쓸 수 없으므로 직접 고칩니다. 백오피스 코드에는 자기 주소가 없습니다.
   - 홈페이지 주소: `backoffice/src/lib/links.ts`의 `HOMEPAGE_URL`, 위 '배포 주소'
-- 실명이 들어간 화면이므로 Cloudflare Access(이메일 일회용 코드)로 접근을 제한합니다.
+- 접근 암호 (Cloudflare Access 대신 사용)
+  - `backoffice/functions/_middleware.ts`가 화면·저장 API·정적 파일을 포함한 모든 요청을 검사합니다. 통과 표시가 없으면 `/login` 암호 화면으로 보냅니다. (저장 API와 정적 파일은 401)
+  - 암호: Pages 시크릿 `ADMIN_PASSWORD`. **운영(Production)과 미리보기(Preview) 환경 모두**에 넣어야 합니다. 없으면 모든 요청을 막고 '접근 암호가 설정되지 않았습니다'를 보여 줍니다. 로컬은 `backoffice/.dev.vars`.
+  - 통과 쿠키 `bo_session`: HttpOnly, Secure, SameSite=Strict 세션 쿠키. 암호가 아니라 '발급 시각 + 서명'을 담고, 요청마다 다시 발급되어 30분 동안 사용하지 않으면 다시 암호를 묻습니다. 브라우저를 닫아도 사라집니다.
+  - 암호를 바꾸면 들어와 있던 사람도 모두 다시 암호를 입력해야 합니다.
+  - 틀리면 1.5초 늦게 응답하고, 5번 틀리면 1분 동안 입력을 받지 않습니다(남은 초 표시).
+  - SameSite=Strict라서 홈페이지 `/admin`이나 외부 링크로 들어올 때마다 암호를 묻습니다.
+  - 구현: `backoffice/src/server/auth.ts`(쿠키 서명·확인), `login-page.ts`(암호 화면)
 
 ---
 
@@ -370,7 +377,7 @@ type AppData = { members: Member[]; tasks: Task[]; publishes: PublishItem[]; eve
 - 시크릿: `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`. Pages 시크릿과 `backoffice/.dev.vars`에 둡니다.
   - 토큰은 이 저장소만 대상으로 하는 Fine-grained 토큰입니다.
   - 권한: Contents 읽기·쓰기, Commit statuses 읽기
-- **접근 제한 필수**: 홈페이지를 바꾸는 기능이므로, 저장 기능을 켜기 전에 Cloudflare Access를 반드시 설정합니다.
+- **접근 제한 필수**: 홈페이지를 바꾸는 기능이므로 접근 암호(8번)로 백오피스 전체를 보호합니다. `ADMIN_PASSWORD`를 넣기 전에는 백오피스가 열리지 않습니다.
 - 구현 위치
   - 저장 API: `backoffice/functions/api/site/` (`content`, `post`, `impact`, `asset`, `deploy-status`, `_middleware`)
   - GitHub 연동과 재시도: `backoffice/src/server/`
