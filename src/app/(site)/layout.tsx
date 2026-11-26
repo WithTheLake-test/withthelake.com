@@ -4,7 +4,7 @@ import Analytics from "@/components/Analytics";
 import { getContent } from "@/lib/cms/store";
 
 export default async function SiteLayout({ children }: LayoutProps<"/">) {
-  const { site } = await getContent();
+  const { site, story } = await getContent();
   return (
     <>
       <a
@@ -13,7 +13,7 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
       >
         본문으로 건너뛰기
       </a>
-      <Header site={site} />
+      <Header site={site} storyCategories={story.categories} />
       <main id="content" className="flex-1">
         {children}
       </main>

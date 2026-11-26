@@ -12,7 +12,7 @@ import type { SiteSettings } from "@/lib/cms/types";
  * - 서브페이지는 항상 네이비 바
  * - 우측: CONTACT 링크 + 햄버거 → 전체화면 사이트맵 메뉴
  */
-function buildMenu(site: SiteSettings) {
+function buildMenu(site: SiteSettings, storyCategories: string[]) {
   return [
     {
       title: "ABOUT",
@@ -54,11 +54,7 @@ function buildMenu(site: SiteSettings) {
     {
       title: "STORY",
       href: "/story",
-      links: [
-        { label: "맨발걷기 정보", href: "/story?category=맨발걷기 정보" },
-        { label: "힐링로드ON", href: "/story?category=힐링로드ON" },
-        { label: "NEWS", href: "/story?category=NEWS" },
-      ],
+      links: storyCategories.map((category) => ({ label: category, href: `/story?category=${category}` })),
     },
     {
       title: "STORE",
@@ -79,12 +75,12 @@ function buildMenu(site: SiteSettings) {
   ];
 }
 
-export default function Header({ site }: { site: SiteSettings }) {
+export default function Header({ site, storyCategories }: { site: SiteSettings; storyCategories: string[] }) {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const MENU = buildMenu(site);
+  const MENU = buildMenu(site, storyCategories);
 
   const [lastPath, setLastPath] = useState(pathname);
   if (pathname !== lastPath) {
