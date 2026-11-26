@@ -1,0 +1,2 @@
+/admin    https://withthelake-backoffice.pages.dev/ 302
+/admin/*  https://withthelake-backoffice.pages.dev/:splat 302

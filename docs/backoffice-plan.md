@@ -268,6 +268,10 @@ type AppData = { members: Member[]; tasks: Task[]; publishes: PublishItem[]; eve
   - `src/lib/cms/types.ts` (홈페이지 데이터 형식)
 - 복사 대상 파일을 늘리거나 줄이면 위 목록과 `sync-site.mjs`를 함께 고칩니다.
 - 기존 홈페이지 프로젝트의 빌드 감시 경로에서 `backoffice/**`를 제외합니다.
+- 홈페이지 `/admin` 이동: `public/_redirects`가 `/admin`과 `/admin/*`를 백오피스로 302 이동시킵니다. `/admin/` 뒤 경로와 쿼리는 그대로 넘어갑니다. (예: `/admin/site/posts` → 백오피스 `/site/posts`)
+- 주소가 바뀔 때 고칠 곳
+  - 백오피스 주소(예: `admin.withthelake.com`): `public/_redirects`의 두 줄, 위 '배포 주소'. `_redirects`는 Cloudflare가 직접 읽는 정적 파일이라 상수를 쓸 수 없으므로 직접 고칩니다. 백오피스 코드에는 자기 주소가 없습니다.
+  - 홈페이지 주소: `backoffice/src/lib/links.ts`의 `HOMEPAGE_URL`, 위 '배포 주소'
 - 실명이 들어간 화면이므로 Cloudflare Access(이메일 일회용 코드)로 접근을 제한합니다.
 
 ---
