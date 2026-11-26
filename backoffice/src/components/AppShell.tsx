@@ -3,17 +3,31 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { HOMEPAGE_URL } from "@/lib/links";
 import { useReload } from "@/lib/store";
 import { useUser } from "@/lib/user";
 import Avatar from "./Avatar";
 import { outlineButton } from "./Button";
+import ExternalLink from "./ExternalLink";
 import { useToast } from "./Toast";
 
 const MENU = [
-  { label: "홈", href: "/" },
-  { label: "캘린더", href: "/calendar" },
-  { label: "진행 현황", href: "/progress" },
-  { label: "팀 현황", href: "/team" },
+  {
+    title: "업무",
+    items: [
+      { label: "홈", href: "/" },
+      { label: "캘린더", href: "/calendar" },
+      { label: "진행 현황", href: "/progress" },
+      { label: "팀 현황", href: "/team" },
+    ],
+  },
+  {
+    title: "홈페이지 관리",
+    items: [
+      { label: "게시물 (STORY)", href: "/site/posts" },
+      { label: "성과 (IMPACT)", href: "/site/impact" },
+    ],
+  },
 ];
 
 const UPCOMING_MENU = "영업, 경영지원, 메일 공유, 설정";
@@ -61,21 +75,26 @@ export default function AppShell({ children }: { children: ReactNode }) {
           <p className="text-base font-extrabold tracking-wide">WITH THE LAKE</p>
           <p className="mt-0.5 text-sm text-muted">업무 관리</p>
         </Link>
-        <nav className="flex-1">
-          <ul className="space-y-1">
-            {MENU.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={`flex h-[46px] items-center rounded-lg px-3 text-base ${
-                    isActive(pathname, item.href) ? "bg-ink font-semibold text-white" : "text-ink hover:bg-soft"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+        <nav className="flex-1 space-y-6">
+          {MENU.map((group) => (
+            <div key={group.title}>
+              <p className="mb-1.5 px-3 text-sm font-semibold text-muted">{group.title}</p>
+              <ul className="space-y-1">
+                {group.items.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={`flex h-[46px] items-center rounded-lg px-3 text-base ${
+                        isActive(pathname, item.href) ? "bg-ink font-semibold text-white" : "text-ink hover:bg-soft"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </nav>
         <div className="px-2.5 text-sm leading-relaxed text-muted">
           <p>다음에 추가될 메뉴</p>
@@ -85,12 +104,24 @@ export default function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-[60px] shrink-0 items-center justify-between border-b border-line bg-white px-7">
-          <div className="flex items-center gap-3">
-            <span className="text-muted">노션·구글 캘린더 최종 업데이트 {loadedAt}</span>
-            <button type="button" onClick={refresh} className={outlineButton}>
-              새로고침
-            </button>
-          </div>
+          {pathname.startsWith("/site") ? (
+            <div className="flex items-center gap-3">
+              {/* Deploy status is connected together with saving. */}
+              <span className="text-muted">
+                홈페이지 반영 상태: <strong className="text-ink">연결 전</strong>
+              </span>
+              <ExternalLink href={HOMEPAGE_URL} className={outlineButton}>
+                홈페이지 열기
+              </ExternalLink>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-muted">노션·구글 캘린더 최종 업데이트 {loadedAt}</span>
+              <button type="button" onClick={refresh} className={outlineButton}>
+                새로고침
+              </button>
+            </div>
+          )}
           <UserSelect />
         </header>
         <main className="flex-1 px-7 py-8">{children}</main>

@@ -252,12 +252,21 @@ type AppData = { members: Member[]; tasks: Task[]; publishes: PublishItem[]; eve
 
 ## 8. 배포
 
+- 배포 주소
+  - 홈페이지: https://withthelake-test.pages.dev (백오피스가 사진을 불러오고 '홈페이지 열기'로 여는 주소, `backoffice/src/lib/links.ts`의 `HOMEPAGE_URL`)
+  - 백오피스: https://withthelake-backoffice.pages.dev
 - Cloudflare Pages 프로젝트 `withthelake-backoffice`가 `main` 브랜치로 연결되어 있습니다.
   - 루트 디렉터리: `backoffice`
   - 빌드 명령: `npm run build`
   - 출력: `out`
   - 설정 파일: `backoffice/wrangler.jsonc`
 - main에 합치면 자동으로 다시 배포됩니다.
+- 백오피스 프로젝트의 빌드 감시 경로(포함)는 아래 4개입니다. 백오피스는 빌드할 때 `backoffice/scripts/sync-site.mjs`로 홈페이지 파일을 복사해 쓰므로, 이 파일들만 바뀌어도 다시 빌드해야 합니다.
+  - `backoffice/**`
+  - `content/site-content.json` (글·성과 데이터)
+  - `src/lib/story-body.ts` (본문 표시 규칙, 미리보기와 공유)
+  - `src/lib/cms/types.ts` (홈페이지 데이터 형식)
+- 복사 대상 파일을 늘리거나 줄이면 위 목록과 `sync-site.mjs`를 함께 고칩니다.
 - 기존 홈페이지 프로젝트의 빌드 감시 경로에서 `backoffice/**`를 제외합니다.
 - 실명이 들어간 화면이므로 Cloudflare Access(이메일 일회용 코드)로 접근을 제한합니다.
 

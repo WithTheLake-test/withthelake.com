@@ -1,4 +1,4 @@
-type Option<T extends string> = { value: T; label: string };
+type Option<T extends string> = { value: T; label: string; count?: number };
 
 type Props<T extends string> = {
   label?: string;
@@ -24,6 +24,7 @@ export default function ToggleGroup<T extends string>({ label, options, value, o
             }`}
           >
             {option.label}
+            {option.count !== undefined && <span className={`ml-1.5 font-normal ${selected ? "text-white/70" : "text-faint"}`}>{option.count}</span>}
           </button>
         );
       })}
