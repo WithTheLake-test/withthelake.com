@@ -1,144 +1,221 @@
 "use client";
 
 import Link from "next/link";
-import Assignees from "@/components/Assignees";
-import Card, { CardRow } from "@/components/Card";
-import DueLabel from "@/components/DueLabel";
-import StatusBadge from "@/components/StatusBadge";
-import type { Task } from "@/lib/data/types";
-import { TODAY, addDays, daysBetween, endOfWeek, fullDate, startOfWeek, timeLabel } from "@/lib/date";
-import { CATEGORY_SHORT } from "@/lib/publishes";
-import { useData } from "@/lib/store";
-import { byDue, dueWithin, isDone, isOverdue, projectLabel, recentlyDone } from "@/lib/tasks";
+import type { ReactNode } from "react";
+import { outlineButton } from "@/components/Button";
+import FollowUps from "@/components/work/FollowUps";
+import GovProject from "@/components/work/GovProjects";
+import ImportantTimeline from "@/components/work/ImportantTimeline";
+import Sales from "@/components/work/Sales";
+import { Section, Unavailable, cardClass } from "@/components/work/ui";
+import WeeklyGoals from "@/components/work/WeeklyGoals";
+import { TODAY, endOfWeek, monthDay, startOfWeek } from "@/lib/date";
 import { useUser } from "@/lib/user";
+import { useWorkFeed } from "@/lib/work/feed";
+import {
+  blockedContents,
+  dueOf,
+  dueWithin,
+  eventsOn,
+  followUps,
+  governmentProjects,
+  importantSoon,
+  isPublished,
+  needsPhoto,
+  overdueTasks,
+  tasksOn,
+  visible,
+  type Overdue,
+} from "@/lib/work/rules";
+import type { CalendarEvent, WorkTask } from "@/lib/work/types";
 
-const MY_TASK_LIMIT = 5;
-const WEEK_START = startOfWeek(TODAY);
-const WEEK_END = endOfWeek(TODAY);
+const WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"];
+const weekday = (day: string) => WEEKDAY[new Date(`${day}T00:00:00Z`).getUTCDay()];
 
-function CardLink({ href, children }: { href: string; children: string }) {
+const SOURCE_STYLE: Record<CalendarEvent["source"], string> = {
+  company: "bg-blue-50 text-blue-700",
+  ceo: "bg-orange-50 text-orange-700",
+  leave: "bg-soft text-muted",
+};
+
+function StatCard({ label, value, sub, href, alert = false }: { label: string; value: ReactNode; sub: ReactNode; href: string; alert?: boolean }) {
   return (
-    <Link href={href} className="hover:text-ink">
-      {children} →
+    <Link href={href} className={`${cardClass} block hover:border-faint ${alert ? "border-red-200 bg-red-50" : ""}`}>
+      <p className="font-semibold">{label}</p>
+      <p className={`mt-2 text-[40px] leading-none font-bold ${alert ? "text-danger" : ""}`}>{value}</p>
+      <p className={`mt-3 truncate text-sm ${alert ? "text-danger" : "text-muted"}`}>{sub}</p>
     </Link>
   );
 }
 
-// Task title with its project (or category) underneath.
-function TaskTitle({ task, tasks }: { task: Task; tasks: Task[] }) {
-  return (
-    <div className="min-w-0 flex-1">
-      <p className={`truncate ${isDone(task) ? "text-faint line-through" : ""}`}>{task.title}</p>
-      <p className="truncate text-sm text-muted">{projectLabel(task, tasks)}</p>
-    </div>
-  );
-}
-
-const Empty = ({ children }: { children: string }) => <p className="py-6 text-center text-muted">{children}</p>;
+const truncate = (text: string, max = 10) => (text.length > max ? `${text.slice(0, max)}…` : text);
 
 export default function HomeView() {
-  const { user, memberOf } = useUser();
-  const { tasks, publishes, events } = useData();
+  const { user } = useUser();
+  const { feed } = useWorkFeed();
+  const team = user.role === "대표";
 
-  const mine = tasks.filter((task) => task.assigneeIds.includes(user.id));
-  const myOpen = mine.filter((task) => !isDone(task)).sort(byDue);
-  const myTasks = [...myOpen, ...mine.filter((task) => recentlyDone(task, 7))].slice(0, MY_TASK_LIMIT);
-  const dueSoon = myOpen.filter((task) => dueWithin(task, TODAY, addDays(TODAY, 7))).length;
-  const myOverdue = myOpen.filter(isOverdue).length;
+  if (!feed) return <p className="py-20 text-center text-muted">노션·구글 캘린더를 불러오는 중</p>;
 
-  const important = tasks
-    .filter((task) => task.important && !isDone(task) && dueWithin(task, TODAY, addDays(TODAY, 14)))
-    .sort(byDue);
-  const todayEvents = events.filter((event) => event.date === TODAY).sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
-  const weekPublishes = publishes
-    .filter((item) => item.date && item.date >= WEEK_START && item.date <= WEEK_END)
-    .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
-  const urgent = tasks.filter((task) => !isDone(task) && !!task.due && task.due <= WEEK_END).sort(byDue);
+  const notion = feed.notion;
+  const events = feed.calendar?.events ?? [];
+  const allTasks = (notion?.tasks ?? []).filter(visible);
+  const byId = new Map(allTasks.map((t) => [t.id, t]));
+  // The CEO sees the whole team; everyone else sees their own tasks.
+  const tasks = team ? allTasks : allTasks.filter((t) => t.assignees.includes(user.name));
+  const projectOf = (t: WorkTask) => (t.parentIds.map((id) => byId.get(id)?.title).find(Boolean) ?? t.category ?? "");
+
+  const overdue = overdueTasks(tasks, TODAY);
+  const soon = dueWithin(tasks, TODAY, 7);
+  const perDay = soon.reduce<Record<string, number>>((acc, t) => ({ ...acc, [dueOf(t)!]: (acc[dueOf(t)!] ?? 0) + 1 }), {});
+  const busiest = Object.entries(perDay).sort((a, b) => b[1] - a[1])[0];
+  const todayEvents = eventsOn(events, TODAY);
+  const todayTasks = tasksOn(tasks, TODAY);
+  const nextTimed = [...todayEvents.filter((e) => e.time), ...todayTasks.filter((t) => t.time)].sort((a, b) => a.time!.localeCompare(b.time!))[0];
+  const contents = notion?.contents ?? [];
+  const blocked = blockedContents(contents, TODAY);
+  const weekContents = contents.filter((c) => !isPublished(c) && c.date && c.date >= startOfWeek(TODAY) && c.date <= endOfWeek(TODAY));
+  const gov = governmentProjects(allTasks);
 
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-[26px] font-bold">{user.name} 님, 안녕하세요</h1>
-        <p className="mt-1.5 text-base text-muted">
-          {fullDate(TODAY)} · 7일 안에 마감할 내 업무 <strong className="text-ink">{dueSoon}건</strong> · 마감 지난 내 업무{" "}
-          <strong className={myOverdue > 0 ? "text-danger" : "text-ink"}>{myOverdue}건</strong>
-        </p>
+      <div className="mb-7">
+        <h1 className="text-[26px] font-bold">
+          {monthDay(TODAY)} {weekday(TODAY)}요일
+        </h1>
+        <p className="mt-1.5 text-base text-muted">{team ? "대표님 · 팀 전체 기준" : `${user.name} 님 업무 기준`}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
-        <Card title="내 업무" action={<CardLink href="/progress">진행 현황</CardLink>}>
-          <ul>
-            {myTasks.map((task) => (
-              <CardRow key={task.id}>
-                <TaskTitle task={task} tasks={tasks} />
-                <DueLabel task={task} muted className="shrink-0" />
-              </CardRow>
-            ))}
-          </ul>
-          {myTasks.length === 0 && <Empty>담당 업무 없음</Empty>}
-        </Card>
+      <Section title="1 · 오늘 상태" note="숫자를 누르면 해당 화면으로 이동합니다">
+        {!notion && <div className="mb-3"><Unavailable source="노션" /></div>}
+        {!feed.calendar && <div className="mb-3"><Unavailable source="구글 캘린더" /></div>}
+        <div className="grid grid-cols-4 gap-4">
+          <StatCard
+            label="마감 지난 업무"
+            value={notion ? overdue.length : "–"}
+            sub={overdue[0] ? `가장 오래: ${truncate(overdue[0].task.title)} ${overdue[0].days}일` : "없음"}
+            href="/progress"
+            alert={overdue.length > 0}
+          />
+          <StatCard
+            label="7일 안 마감"
+            value={notion ? soon.length : "–"}
+            sub={busiest && busiest[1] > 1 ? `${Number(busiest[0].slice(8))}일(${weekday(busiest[0])})에 ${busiest[1]}건 몰림` : soon[0] ? `${monthDay(dueOf(soon[0])!)} ${truncate(soon[0].title)}` : "없음"}
+            href="/calendar"
+          />
+          <StatCard
+            label="오늘 일정"
+            value={notion || feed.calendar ? todayEvents.length + todayTasks.length : "–"}
+            sub={nextTimed ? `${nextTimed.time} ${truncate(nextTimed.title)}` : todayEvents.length + todayTasks.length ? "종일 일정" : "없음"}
+            href="/calendar"
+          />
+          <StatCard label="발행 막힌 콘텐츠" value={notion ? blocked.total : "–"} sub={`예정일 지남 ${blocked.late} · 날짜·사진 없음 ${blocked.notReady.length}`} href="/calendar" />
+        </div>
+      </Section>
 
-        <Card title="중요 일정" action="중요도 높음 · 2주 이내">
-          <ul>
-            {important.map((task) => {
-              const left = daysBetween(TODAY, task.due!);
-              return (
-                <CardRow key={task.id}>
-                  <span className={`w-20 shrink-0 font-bold ${left <= 3 ? "text-danger" : ""}`}>
-                    {left === 0 ? "오늘" : `${left}일 남음`}
-                  </span>
-                  <TaskTitle task={task} tasks={tasks} />
-                  <span className="shrink-0 text-muted">{fullDate(task.due!)}</span>
-                </CardRow>
-              );
-            })}
-          </ul>
-          {important.length === 0 && <Empty>2주 이내 중요 업무 없음</Empty>}
-        </Card>
+      <Section title="2 · 2주 안 중요 일정" note="중요도 높음 · 마감 D-14~D-day">
+        {notion ? <ImportantTimeline tasks={importantSoon(tasks, TODAY)} category={(t) => t.category ?? ""} today={TODAY} /> : <Unavailable source="노션" />}
+      </Section>
 
-        <Card title="오늘 일정" action="구글 캘린더">
-          <ul>
-            {todayEvents.map((event) => (
-              <CardRow key={event.id}>
-                <span className="w-24 shrink-0">{event.time ? timeLabel(event.time) : "종일"}</span>
-                <span className="min-w-0 flex-1 truncate">{event.title}</span>
-                <span className="shrink-0 text-muted">{event.ownerId === "all" ? "전체" : memberOf(event.ownerId)?.name}</span>
-              </CardRow>
-            ))}
-          </ul>
-          {todayEvents.length === 0 && <Empty>오늘 일정 없음</Empty>}
-        </Card>
+      <Section title="3 · 이번 주 목표와 팔로업">
+        <div className="grid grid-cols-2 items-start gap-4">
+          <WeeklyGoals today={TODAY} me={user.name} />
+          {notion ? (
+            <FollowUps groups={followUps(overdue).filter((g) => team || g.name === user.name)} project={(o: Overdue) => (o.stale ? "프로젝트 · 마감일 없음" : projectOf(o.task))} />
+          ) : (
+            <Unavailable source="노션" />
+          )}
+        </div>
+      </Section>
 
-        <Card title="이번 주 발행" action={<CardLink href="/calendar">캘린더</CardLink>}>
-          <ul>
-            {weekPublishes.map((item) => (
-              <CardRow key={item.id}>
-                <span className="w-28 shrink-0 text-muted">{fullDate(item.date!)}</span>
-                <span className="w-16 shrink-0 text-muted">{CATEGORY_SHORT[item.category]}</span>
-                <span className="min-w-0 flex-1 truncate">{item.title}</span>
-                <Assignees ids={item.assigneeIds} muted className="w-14 shrink-0 text-right" />
-                <span className="flex w-24 shrink-0 justify-end">
-                  <StatusBadge status={item.status} />
-                </span>
-              </CardRow>
-            ))}
-          </ul>
-          {weekPublishes.length === 0 && <Empty>이번 주 발행 예정 없음</Empty>}
-        </Card>
+      <Section title="4 · 오늘과 이번 주 흐름">
+        <div className="grid grid-cols-3 items-start gap-4">
+          <div className={cardClass}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-bold">오늘 일정</h3>
+              <Link href="/calendar" className={`${outlineButton} h-9`}>
+                캘린더 →
+              </Link>
+            </div>
+            {!feed.calendar && <p className="mb-2 text-sm text-danger">구글 캘린더를 불러오지 못했습니다.</p>}
+            {feed.calendar && todayEvents.length + todayTasks.length === 0 && <p className="text-muted">오늘 일정이 없습니다.</p>}
+            <ul className="space-y-2">
+              {todayEvents.map((e) => (
+                <li key={e.id} className="flex items-center gap-3">
+                  <span className={`w-16 shrink-0 rounded-md px-2 py-0.5 text-center text-sm ${SOURCE_STYLE[e.source]}`}>{e.time ?? "종일"}</span>
+                  <span className="truncate">{e.title}</span>
+                </li>
+              ))}
+              {todayTasks.map((t) => (
+                <li key={t.id} className="flex items-center gap-3">
+                  <span className="w-16 shrink-0 rounded-md border border-line px-2 py-0.5 text-center text-sm">{t.time ?? "종일"}</span>
+                  <a href={t.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
+                    {t.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-        <Card title="마감 임박·지난 업무 (팀 전체)" action={<CardLink href="/progress">진행 현황</CardLink>} className="col-span-2">
-          <ul>
-            {urgent.map((task) => (
-              <CardRow key={task.id}>
-                <TaskTitle task={task} tasks={tasks} />
-                <Assignees ids={task.assigneeIds} muted className="w-32 shrink-0 text-right" />
-                <DueLabel task={task} className="w-20 shrink-0 text-right" />
-              </CardRow>
-            ))}
-          </ul>
-          {urgent.length === 0 && <Empty>마감 임박·지난 업무 없음</Empty>}
-        </Card>
-      </div>
+          <div className={cardClass}>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-bold">콘텐츠 · 준비 안 된 것</h3>
+              <Link href="/calendar?only=content" className={`${outlineButton} h-9`}>
+                콘텐츠 →
+              </Link>
+            </div>
+            {!notion ? (
+              <p className="text-sm text-danger">노션을 불러오지 못했습니다.</p>
+            ) : (
+              <>
+                <p className="mb-2 text-sm text-muted">
+                  {weekContents.length ? `이번 주 발행 예정 ${weekContents.length}건` : "이번 주 발행일이 잡힌 콘텐츠가 없습니다"}
+                </p>
+                {blocked.notReady.length === 0 && <p className="text-muted">준비 안 된 콘텐츠가 없습니다.</p>}
+                <ul className="space-y-2">
+                  {blocked.notReady.slice(0, 4).map((c) => (
+                    <li key={c.id} className="flex items-center gap-2">
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${c.category ? "bg-orange-50 text-orange-700" : "border border-line text-muted"}`}>{c.category ?? "발행처 미정"}</span>
+                      <a href={c.url} target="_blank" rel="noopener noreferrer" className="min-w-0 flex-1 truncate hover:underline">
+                        {c.title}
+                      </a>
+                      <span className="shrink-0 rounded-full bg-orange-50 px-2 py-0.5 text-xs text-orange-600">{needsPhoto(c) ? "사진 필요" : "발행일 없음"}</span>
+                    </li>
+                  ))}
+                </ul>
+                {blocked.notReady.length > 4 && <p className="mt-2 text-sm text-muted">외 {blocked.notReady.length - 4}건</p>}
+              </>
+            )}
+          </div>
+
+          <div className={cardClass}>
+            <h3 className="mb-3 text-base font-bold">이번 달 결제 예정</h3>
+            <p className="flex justify-between">
+              <span>Google Workspace</span>
+              <span className="text-muted">[결제일] · [금액]</span>
+            </p>
+          </div>
+        </div>
+      </Section>
+
+      <Section title={`5 · 정부지원사업 진행중 ${gov.projects.length}`} note={`마감 빠른 순${gov.onHold ? ` · 보류 ${gov.onHold}건 제외` : ""}`}>
+        {notion ? (
+          gov.projects.length ? (
+            <div className="grid grid-cols-3 items-start gap-4">
+              {gov.projects.map((item) => (
+                <GovProject key={item.project.id} item={item} today={TODAY} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted">진행 중인 정부지원사업이 없습니다.</p>
+          )
+        ) : (
+          <Unavailable source="노션" />
+        )}
+      </Section>
+
+      {notion ? <Sales items={notion.sales} today={TODAY} /> : <Section title="6 · 영업 활동"><Unavailable source="노션" /></Section>}
     </>
   );
 }
+

@@ -21,6 +21,8 @@ export async function siteApi<T>(path: string, init?: { method?: "PUT" | "DELETE
   }
   // The 30-minute access session ran out: go back to the password screen, then return here.
   if (res.status === 401) {
+    // /login is served by the password middleware, not a Next.js page, so a full page load is needed.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = `/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
     throw new ApiError("접근 암호를 다시 입력해 주세요.");
   }

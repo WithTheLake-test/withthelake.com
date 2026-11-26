@@ -6,9 +6,11 @@ import type { ReactNode } from "react";
 import { HOMEPAGE_URL } from "@/lib/links";
 import { useReload } from "@/lib/store";
 import { useUser } from "@/lib/user";
+import { usesLiveFeed } from "@/lib/work/feed";
 import Avatar from "./Avatar";
 import { outlineButton } from "./Button";
 import ExternalLink from "./ExternalLink";
+import LiveSync from "./LiveSync";
 import DeployStatus from "./site/DeployStatus";
 import { useToast } from "./Toast";
 
@@ -112,6 +114,8 @@ export default function AppShell({ children }: { children: ReactNode }) {
                 홈페이지 열기
               </ExternalLink>
             </div>
+          ) : usesLiveFeed(pathname) ? (
+            <LiveSync />
           ) : (
             <div className="flex items-center gap-3">
               <span className="text-muted">노션·구글 캘린더 최종 업데이트 {loadedAt}</span>
