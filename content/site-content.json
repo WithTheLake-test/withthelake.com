@@ -923,10 +923,6 @@
           {
             "month": "",
             "text": "의료기기 2등급 인허가 취득 (목표)"
-          },
-          {
-            "month": "",
-            "text": "저장 테스트 연혁"
           }
         ]
       }
@@ -1051,7 +1047,7 @@
       {
         "slug": "senio-patent-filed",
         "category": "NEWS",
-        "title": "SENIO 핵심 알고리즘 특허 출원을 완료했습니다 (다른 쪽 수정)",
+        "title": "SENIO 핵심 알고리즘 특허 출원을 완료했습니다",
         "date": "2026.08.19",
         "image": "/assets/senio/device-styled.jpg",
         "excerpt": "소변 스트립 판독 편차를 줄이는 핵심 알고리즘에 대해 특허 출원을 완료했습니다. 상표 4건과 기기 외관 디자인 1건도 함께 출원했습니다.",
@@ -1068,7 +1064,7 @@
         "title": "맨발걷기 지도자 양성과정, 현장의 건강리더를 키웁니다",
         "date": "2026.06.20",
         "image": "/assets/activities/training-1.jpg",
-        "excerpt": "저장 테스트로 바꾼 요약입니다.",
+        "excerpt": "지역에서 걷기 프로그램을 직접 이끌 지도자를 양성하는 과정입니다. 이론 교육과 현장 실습을 함께 진행합니다.",
         "body": [
           "맨발걷기 지도자 양성과정은 지역에서 걷기 프로그램을 직접 운영할 건강리더를 양성하는 교육입니다.",
           "걷기의 기본 원리와 안전 수칙, 시니어 대상 프로그램 운영 방법을 배우고, 현장 실습을 통해 실제 진행 경험을 쌓습니다.",
@@ -1118,17 +1114,16 @@
         "category": "NEWS",
         "title": "웰니스 특강, 건강한 습관을 나누다",
         "date": "2026.02.27",
-        "image": "/uploads/20261126-test-photo-kqt6.jpg",
+        "image": "/assets/activities/wellness-lecture.jpg",
         "excerpt": "기관 이용자와 담당자를 대상으로 예방건강관리 특강을 진행했습니다.",
         "body": [
-          "![사진 설명](/uploads/20261126-test-photo-0mqx.jpg)",
           "지역 기관 이용자와 담당자를 대상으로 웰니스 특강을 진행했습니다. 걷기·생활습관·마음건강을 주제로 일상에서 실천할 수 있는 방법을 나눴습니다."
         ]
       },
       {
         "slug": "governance-meeting",
         "category": "NEWS",
-        "title": "시니어돌봄거버넌스 협의체 회의에 참여했습니다 (저장 테스트)",
+        "title": "시니어돌봄거버넌스 협의체 회의에 참여했습니다",
         "date": "2026.01.22",
         "image": "/assets/activities/governance-meeting.jpg",
         "excerpt": "지자체·복지기관·기업이 함께 지역 돌봄 체계를 논의하는 협의체에 참여했습니다.",
