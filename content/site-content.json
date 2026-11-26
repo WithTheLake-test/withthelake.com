@@ -772,6 +772,31 @@
     ],
     "projects": [
       {
+        "src": "/assets/activities/gangwon-senior-fair.jpg",
+        "title": "2026 강원 시니어산업박람회 참가",
+        "body": "11월 19~21일 박람회에 부스를 열고 SENIO 건강체크와 위드웰미 발 관리 제품을 시니어 방문객에게 소개"
+      },
+      {
+        "src": "/assets/activities/slowjog-salon.jpg",
+        "title": "MG함께자람 워크샵 「슬슬쌀롱」",
+        "body": "무리 없이 달리는 슬로우조깅을 배우고 함께 걸으며 건강습관을 나눈 야외 건강 워크샵 (2026.11.11)"
+      },
+      {
+        "src": "/assets/activities/mg-health-school.jpg",
+        "title": "MG함께자람 몸·맘·말 건강학교",
+        "body": "북춘천새마을금고·우두경로당에서 4주간 운동, 건강습관 기록, SENIO 건강체크를 잇는 시니어 건강 프로그램 운영"
+      },
+      {
+        "src": "/assets/activities/gangwon-bio-expo.jpg",
+        "title": "2026 강원 바이오엑스포 참가",
+        "body": "지역창업 페스티벌 in 강원에서 SENIO와 걷기 기반 시니어 헬스케어를 소개하고 방문객 상담 진행"
+      },
+      {
+        "src": "/assets/activities/social-ir-award.jpg",
+        "title": "사회적기업 IR대회 강원특별자치도지사상·KOICA상",
+        "body": "2026 사회적기업 투자유치 역량강화 IR 전국대회에서 강원특별자치도지사상과 KOICA상을 함께 수상 (2026.9.30)"
+      },
+      {
         "src": "/assets/activities/interview-gangwon-elderly.jpg",
         "title": "대한노인회 강원연합회 현장 인터뷰",
         "body": "시니어 건강관리 수요와 현장 운영 조건을 확인하는 사용자 조사"
@@ -862,6 +887,8 @@
       }
     ],
     "awards": [
+      "강원특별자치도지사상 (사회적기업 IR대회)",
+      "KOICA상 (사회적기업 IR대회)",
       "강원지방중소벤처기업청장상",
       "강원관광재단 이사장상",
       "강원여성창업 공모전 대상"
@@ -952,7 +979,7 @@
     "sections": {
       "projects": {
         "title": "주요 프로젝트",
-        "lead": "현장 조사, 협의체 참여, 교육 등 지역사회와 함께 진행한 활동입니다."
+        "lead": "현장 조사와 건강 프로그램 운영, 박람회 참가와 수상까지 지역사회와 함께 만든 활동입니다."
       },
       "pilots": {
         "title": "SENIO 실증 현황",
