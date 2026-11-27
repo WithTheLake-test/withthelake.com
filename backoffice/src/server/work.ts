@@ -34,6 +34,8 @@ async function loadCalendars(env: WorkEnv): Promise<Omit<CalendarPart, "syncedAt
   return { events: lists.flat() };
 }
 
+const reason = (error: unknown) => (error instanceof Error ? error.message : String(error)).slice(0, 160);
+
 export async function loadWorkFeed(env: WorkEnv, fresh: boolean) {
   const [notion, calendar] = await Promise.allSettled([
     cached("notion-v2", NOTION_TTL, fresh, () => createNotion(env).load()),
@@ -44,5 +46,10 @@ export async function loadWorkFeed(env: WorkEnv, fresh: boolean) {
   return {
     notion: notion.status === "fulfilled" ? ({ ...notion.value.value, syncedAt: notion.value.at } satisfies NotionPart) : null,
     calendar: calendar.status === "fulfilled" ? ({ ...calendar.value.value, syncedAt: calendar.value.at } satisfies CalendarPart) : null,
+    // Short reasons (status codes and setting names only, never secrets) so the top bar can say why a side failed.
+    errors: {
+      notion: notion.status === "rejected" ? reason(notion.reason) : undefined,
+      calendar: calendar.status === "rejected" ? reason(calendar.reason) : undefined,
+    },
   };
 }

@@ -38,7 +38,8 @@ const dateOf = (p?: Property) => p?.date as { start: string; end: string | null 
 
 export function createNotion(env: NotionEnv) {
   const { NOTION_TOKEN: token } = env;
-  if (!token || !env.NOTION_TASKS_DB || !env.NOTION_CONTENTS_DB) throw new Error("노션 설정이 없습니다.");
+  const missing = (["NOTION_TOKEN", "NOTION_TASKS_DB", "NOTION_CONTENTS_DB"] as const).filter((key) => !env[key]);
+  if (missing.length) throw new Error(`설정 없음: ${missing.join(", ")}`);
 
   async function call<T>(path: string, body?: unknown): Promise<T> {
     const res = await fetch(`${API}${path}`, {
@@ -46,11 +47,20 @@ export function createNotion(env: NotionEnv) {
       headers: { Authorization: `Bearer ${token}`, "Notion-Version": VERSION, "Content-Type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (!res.ok) throw new Error(`Notion ${res.status}`);
+    if (!res.ok) {
+      const { code } = (await res.json().catch(() => ({}))) as { code?: string };
+      throw new Error(`Notion ${res.status}${code ? ` ${code}` : ""} (${path.split("/")[1]})`);
+    }
     return (await res.json()) as T;
   }
 
-  async function rows(database: string): Promise<Page[]> {
+  async function rows(database: string, label: string): Promise<Page[]> {
+    return readRows(database).catch((error: Error) => {
+      throw new Error(`${label} DB: ${error.message}`);
+    });
+  }
+
+  async function readRows(database: string): Promise<Page[]> {
     const db = await call<{ data_sources: { id: string }[] }>(`/databases/${idOf(database)}`);
     const source = db.data_sources[0]?.id;
     if (!source) return [];
@@ -120,12 +130,15 @@ export function createNotion(env: NotionEnv) {
 
   async function load(): Promise<Omit<NotionPart, "syncedAt">> {
     const [tasks, contents, sales, goals] = await Promise.all([
-      rows(env.NOTION_TASKS_DB!),
-      rows(env.NOTION_CONTENTS_DB!),
-      env.NOTION_SALES_DB ? rows(env.NOTION_SALES_DB) : Promise.resolve([]),
-      env.NOTION_GOALS_DB ? rows(env.NOTION_GOALS_DB) : Promise.resolve([]),
+      rows(env.NOTION_TASKS_DB!, "업무"),
+      rows(env.NOTION_CONTENTS_DB!, "콘텐츠"),
+      env.NOTION_SALES_DB ? rows(env.NOTION_SALES_DB, "영업") : Promise.resolve([]),
+      // The goals DB is optional: if it fails (e.g. the integration is not connected), only the goals card shows the error.
+      env.NOTION_GOALS_DB
+        ? rows(env.NOTION_GOALS_DB, "주간목표").catch((error) => (console.error("[work] notion goals", error), undefined))
+        : Promise.resolve([]),
     ]);
-    return { tasks: tasks.map(toTask), contents: contents.map(toContent), sales: sales.map(toSales), goals: goals.map(toGoal) };
+    return { tasks: tasks.map(toTask), contents: contents.map(toContent), sales: sales.map(toSales), goals: goals?.map(toGoal) };
   }
 
   return { load };
