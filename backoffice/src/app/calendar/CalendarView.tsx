@@ -6,7 +6,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { outlineButton } from "@/components/Button";
 import PageHeader from "@/components/PageHeader";
 import { cardClass, Unavailable } from "@/components/work/ui";
-import { TODAY, WEEKDAY_HEADERS, addDays, startOfWeek } from "@/lib/date";
+import { TODAY, WEEKDAY_HEADERS, addMonths, monthGrid, monthLabel, monthOf } from "@/lib/date";
 import { useUser } from "@/lib/user";
 import { calendarDay, findAlerts } from "@/lib/work/calendar";
 import { useWorkFeed } from "@/lib/work/feed";
@@ -35,8 +35,6 @@ const EVENT_STYLE: Record<CalendarEvent["source"], string> = {
 };
 
 const dayNumber = (day: string) => (day.endsWith("-01") ? `${Number(day.slice(5, 7))}/1` : String(Number(day.slice(8))));
-const rangeLabel = (from: string, to: string) =>
-  from.slice(0, 7) === to.slice(0, 7) ? `${Number(from.slice(5, 7))}월 ${Number(from.slice(8))}일 – ${Number(to.slice(8))}일` : `${Number(from.slice(5, 7))}월 ${Number(from.slice(8))}일 – ${Number(to.slice(5, 7))}월 ${Number(to.slice(8))}일`;
 const short = (day: string) => `${Number(day.slice(5, 7))}/${Number(day.slice(8))}`;
 
 function readSaved(): Record<Source, boolean> {
@@ -100,7 +98,7 @@ export default function CalendarView() {
   const onlyContent = params.get("only") === "content";
   const [saved, setSaved] = useState<Record<Source, boolean>>(ALL_ON);
   const [override, setOverride] = useState(onlyContent);
-  const [start, setStart] = useState(startOfWeek(TODAY));
+  const [month, setMonth] = useState(monthOf(TODAY));
   const [person, setPerson] = useState(EVERYONE);
 
   // Saved choice is read after mount (localStorage does not exist during the static build).
@@ -120,8 +118,12 @@ export default function CalendarView() {
     } catch {}
   };
 
-  const days = Array.from({ length: 14 }, (_, i) => addDays(start, i));
-  const last = days[13];
+  // Whole weeks (Mon–Sun) covering the month; a trailing week that is all next month is dropped.
+  const grid = monthGrid(month);
+  const days = grid.slice(0, grid[35] && monthOf(grid[35]) === month ? 42 : 35);
+  const inMonth = days.filter((d) => monthOf(d) === month);
+  const start = inMonth[0];
+  const last = inMonth.at(-1)!;
   const ceo = members.find((m) => m.role === "대표")?.name;
 
   const notion = feed?.notion;
@@ -146,7 +148,7 @@ export default function CalendarView() {
   };
 
   const openDue = (day: string) => viewTasks.filter((t) => t.status !== DONE && calendarDay(t) === day).length;
-  const alerts = notion ? findAlerts(days, viewTasks, events.filter(eventFor), TODAY) : [];
+  const alerts = notion ? findAlerts(inMonth, viewTasks, events.filter(eventFor), TODAY) : [];
   const contentsInView = contents.filter((c) => c.date && c.date >= start && c.date <= last).length;
   const undated = contents.filter((c) => !c.date && !isPublished(c)).length;
 
@@ -182,16 +184,16 @@ export default function CalendarView() {
       <div className="flex flex-wrap items-start gap-5">
         <section className={`${cardClass} min-w-0 flex-[999_1_640px] overflow-x-auto !p-4`}>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-base font-bold">{rangeLabel(start, last)}</h2>
+            <h2 className="text-base font-bold">{monthLabel(month)}</h2>
             <div className="flex gap-2">
-              <button type="button" className={`${outlineButton} h-9`} onClick={() => setStart(addDays(start, -14))}>
-                ← 이전 2주
+              <button type="button" className={`${outlineButton} h-9`} onClick={() => setMonth(addMonths(month, -1))}>
+                ← 이전 달
               </button>
-              <button type="button" className={`${outlineButton} h-9`} onClick={() => setStart(startOfWeek(TODAY))}>
+              <button type="button" className={`${outlineButton} h-9`} onClick={() => setMonth(monthOf(TODAY))}>
                 오늘
               </button>
-              <button type="button" className={`${outlineButton} h-9`} onClick={() => setStart(addDays(start, 14))}>
-                다음 2주 →
+              <button type="button" className={`${outlineButton} h-9`} onClick={() => setMonth(addMonths(month, 1))}>
+                다음 달 →
               </button>
             </div>
           </div>
@@ -211,10 +213,11 @@ export default function CalendarView() {
                 const crunch = due >= CRUNCH;
                 const limit = crunch ? CELL_LIMIT - 1 : CELL_LIMIT;
                 const today = day === TODAY;
+                const outside = monthOf(day) !== month;
                 return (
                   <div
                     key={day}
-                    className={`flex min-h-[170px] flex-col gap-1 rounded-lg p-1.5 ${crunch ? "bg-red-50 outline outline-1 outline-red-200" : today ? "bg-white outline-2 outline-ink" : "bg-stone-50"}`}
+                    className={`flex min-h-[170px] flex-col gap-1 rounded-lg p-1.5 ${crunch ? "bg-red-50 outline outline-1 outline-red-200" : today ? "bg-white outline-2 outline-ink" : "bg-stone-50"} ${outside ? "opacity-45" : ""}`}
                   >
                     <span className="flex items-center justify-between text-[13px] font-bold">
                       <span>
@@ -235,7 +238,7 @@ export default function CalendarView() {
 
           {notion && shown.content && contentsInView === 0 && undated > 0 && (
             <p className="mt-3 flex flex-wrap items-center gap-2 px-1 text-sm text-muted">
-              콘텐츠는 발행일이 비어 있는 게 많아 이번 2주에 표시된 게 없습니다
+              콘텐츠는 발행일이 비어 있는 게 많아 이번 달에 표시된 게 없습니다
               <Link href="/" className={`${outlineButton} h-8`}>
                 발행일 없는 콘텐츠 보기
               </Link>
@@ -248,7 +251,7 @@ export default function CalendarView() {
           {!notion ? (
             <p className="text-sm text-muted">노션을 불러오지 못해 확인할 수 없습니다.</p>
           ) : alerts.length === 0 ? (
-            <p className={`${cardClass} text-sm text-muted`}>이 2주에는 겹치거나 몰린 일정이 없습니다.</p>
+            <p className={`${cardClass} text-sm text-muted`}>이번 달에는 겹치거나 몰린 일정이 없습니다.</p>
           ) : (
             <div className="space-y-3">
               {alerts.map((a, i) => (
