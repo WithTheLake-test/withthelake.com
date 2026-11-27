@@ -31,6 +31,8 @@ export type SalesItem = {
   owners: string[];
 };
 
+export type WeeklyGoal = { id: string; title: string; url: string; week?: string; assignees: string[]; done: boolean };
+
 export type CalendarSource = "company" | "ceo" | "leave";
 
 export type CalendarEvent = {
@@ -43,7 +45,7 @@ export type CalendarEvent = {
   person?: string; // owner: the CEO calendar, or the name found in a leave title
 };
 
-export type NotionPart = { tasks: WorkTask[]; contents: ContentItem[]; sales: SalesItem[]; syncedAt: number };
+export type NotionPart = { tasks: WorkTask[]; contents: ContentItem[]; sales: SalesItem[]; goals: WeeklyGoal[]; syncedAt: number };
 export type CalendarPart = { events: CalendarEvent[]; syncedAt: number };
 
 export type WorkFeed = { notion: NotionPart | null; calendar: CalendarPart | null };

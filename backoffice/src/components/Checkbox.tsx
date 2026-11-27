@@ -1,4 +1,5 @@
-type Props = { checked: boolean; onChange: () => void; label: string; showLabel?: boolean };
+// Without onChange it only shows the state (read-only data such as Notion).
+type Props = { checked: boolean; onChange?: () => void; label: string; showLabel?: boolean };
 
 export default function Checkbox({ checked, onChange, label, showLabel = false }: Props) {
   return (
@@ -6,8 +7,10 @@ export default function Checkbox({ checked, onChange, label, showLabel = false }
       type="button"
       role="checkbox"
       aria-checked={checked}
+      aria-readonly={!onChange || undefined}
       aria-label={showLabel ? undefined : label}
       onClick={onChange}
+      disabled={!onChange}
       className="inline-flex shrink-0 items-center gap-2"
     >
       <span

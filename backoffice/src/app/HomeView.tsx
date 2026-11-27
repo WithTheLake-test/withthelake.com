@@ -141,7 +141,7 @@ export default function HomeView() {
 
       <Section title="3 · 이번 주 목표와 팔로업">
         <div className="grid grid-cols-2 items-start gap-4">
-          <WeeklyGoals today={TODAY} me={me?.name} />
+          <WeeklyGoals goals={notion?.goals} today={TODAY} />
           {notion ? (
             <FollowUps groups={followUps(overdue).filter((g) => !me || g.name === me.name)} project={(o: Overdue) => (o.stale ? "프로젝트 · 마감일 없음" : projectOf(o.task))} />
           ) : (
