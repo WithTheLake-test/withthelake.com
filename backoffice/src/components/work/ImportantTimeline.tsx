@@ -7,7 +7,7 @@ const SPAN = 14;
 const CARD_COLUMNS = 3;
 
 // Important tasks over the next two weeks, placed by days left; tasks on the same day stack in one card.
-export default function ImportantTimeline({ tasks, category, today }: { tasks: WorkTask[]; category: (t: WorkTask) => string; today: string }) {
+export default function ImportantTimeline({ tasks, parent, category, today }: { tasks: WorkTask[]; parent: (t: WorkTask) => string | undefined; category: (t: WorkTask) => string; today: string }) {
   const groups = [...new Set(tasks.map((t) => dueOf(t)!))].map((day) => ({ day, items: tasks.filter((t) => dueOf(t) === day) }));
   const ticks = [0, 4, 7, 11, 14].map((d) => addDays(today, d));
 
@@ -40,6 +40,7 @@ export default function ImportantTimeline({ tasks, category, today }: { tasks: W
                       {day !== today && ` · ${monthDay(day)}`}
                     </p>
                     <p className="font-semibold text-ink">{t.title}</p>
+                    {parent(t) && <p className="text-sm font-bold text-ink">{parent(t)}</p>}
                     <p className="text-sm text-muted">{category(t)}</p>
                   </a>
                 ))}
