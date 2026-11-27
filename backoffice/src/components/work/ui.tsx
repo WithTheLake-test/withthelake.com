@@ -14,8 +14,13 @@ export function Section({ title, note, children }: { title: string; note?: React
   );
 }
 
-export function Unavailable({ source }: { source: "노션" | "구글 캘린더" }) {
-  return <p className="rounded-xl border border-dashed border-line bg-white px-5 py-6 text-center text-muted">{source === "노션" ? "노션을" : "구글 캘린더를"} 불러오지 못했습니다.</p>;
+export function Unavailable({ source, reason }: { source: "노션" | "구글 캘린더"; reason?: string }) {
+  return (
+    <p className="rounded-xl border border-dashed border-line bg-white px-5 py-6 text-center text-muted">
+      {source === "노션" ? "노션을" : "구글 캘린더를"} 불러오지 못했습니다.
+      {reason && <span className="mt-1 block text-sm text-danger">{reason}</span>}
+    </p>
+  );
 }
 
 // Status colour: red = past, orange = within 3 days, gray = later.
