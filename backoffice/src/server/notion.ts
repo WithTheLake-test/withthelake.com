@@ -128,6 +128,8 @@ export function createNotion(env: NotionEnv) {
     done: p["달성"]?.checkbox === true,
   });
 
+  let goalsError: string | undefined;
+
   async function load(): Promise<Omit<NotionPart, "syncedAt">> {
     const [tasks, contents, sales, goals] = await Promise.all([
       rows(env.NOTION_TASKS_DB!, "업무"),
@@ -135,10 +137,14 @@ export function createNotion(env: NotionEnv) {
       env.NOTION_SALES_DB ? rows(env.NOTION_SALES_DB, "영업") : Promise.resolve([]),
       // The goals DB is optional: if it fails (e.g. the integration is not connected), only the goals card shows the error.
       env.NOTION_GOALS_DB
-        ? rows(env.NOTION_GOALS_DB, "주간목표").catch((error) => (console.error("[work] notion goals", error), undefined))
+        ? rows(env.NOTION_GOALS_DB, "주간목표").catch((error: Error) => {
+            console.error("[work] notion goals", error);
+            goalsError = error.message.slice(0, 160);
+            return undefined;
+          })
         : Promise.resolve([]),
     ]);
-    return { tasks: tasks.map(toTask), contents: contents.map(toContent), sales: sales.map(toSales), goals: goals?.map(toGoal) };
+    return { tasks: tasks.map(toTask), contents: contents.map(toContent), sales: sales.map(toSales), goals: goals?.map(toGoal), goalsError };
   }
 
   return { load };

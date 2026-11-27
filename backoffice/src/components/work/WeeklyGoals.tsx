@@ -9,8 +9,8 @@ const short = (day: string) => `${Number(day.slice(5, 7))}/${Number(day.slice(8)
 
 // This week's 공동 주간목표 from Notion (read-only; goals are added and checked in Notion).
 // A goal belongs to the week its 주 date falls in, so any day of the week works, not only Monday.
-export default function WeeklyGoals({ goals, today }: { goals?: WeeklyGoal[]; today: string }) {
-  if (!goals) return <Unavailable source="노션" />;
+export default function WeeklyGoals({ goals, error, today }: { goals?: WeeklyGoal[]; error?: string; today: string }) {
+  if (!goals) return <Unavailable source="노션" reason={error} />;
   const from = startOfWeek(today);
   const to = endOfWeek(today);
   const week = goals.filter((g) => g.week && g.week >= from && g.week <= to).sort((a, b) => Number(a.done) - Number(b.done));
