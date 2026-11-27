@@ -45,7 +45,32 @@ export type CalendarEvent = {
   person?: string; // owner: the CEO calendar, or the name found in a leave title
 };
 
-export type NotionPart = { tasks: WorkTask[]; contents: ContentItem[]; sales: SalesItem[]; goals?: WeeklyGoal[]; goalsError?: string; syncedAt: number };
+// One row of the 💳 구독·정기결제 DB. `date` is any past or next billing date; the cycle decides which months it repeats in.
+export type Payment = {
+  id: string;
+  url: string;
+  name: string;
+  plan?: string;
+  users: string[];
+  cycle?: string; // 매월 | 6개월 | 매년 | 1회 | 무료
+  date?: string;
+  currency?: string; // 원 | 달러
+  amount?: number; // one charge in its own currency (1인 금액 × 인원)
+  krw?: number; // the same charge in won, when known
+  method?: string;
+  status?: string;
+};
+
+export type NotionPart = {
+  tasks: WorkTask[];
+  contents: ContentItem[];
+  sales: SalesItem[];
+  goals?: WeeklyGoal[];
+  goalsError?: string;
+  payments?: Payment[];
+  paymentsError?: string;
+  syncedAt: number;
+};
 export type CalendarPart = { events: CalendarEvent[]; syncedAt: number };
 
 export type WorkFeed = { notion: NotionPart | null; calendar: CalendarPart | null; errors?: { notion?: string; calendar?: string } };

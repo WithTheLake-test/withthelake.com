@@ -1,6 +1,6 @@
 // Notion reader for the home and calendar screens (read-only; relative imports only).
 // API version 2026-03-11: a database has data sources, and rows are read with POST /v1/data_sources/{id}/query.
-import type { ContentItem, NotionPart, SalesItem, WeeklyGoal, WorkTask } from "../lib/work/types";
+import type { ContentItem, NotionPart, Payment, SalesItem, WeeklyGoal, WorkTask } from "../lib/work/types";
 
 export interface NotionEnv {
   NOTION_TOKEN?: string;
@@ -8,6 +8,7 @@ export interface NotionEnv {
   NOTION_CONTENTS_DB?: string;
   NOTION_SALES_DB?: string;
   NOTION_GOALS_DB?: string;
+  NOTION_PAYMENTS_DB?: string;
 }
 
 const API = "https://api.notion.com/v1";
@@ -35,6 +36,12 @@ const multiNames = (p?: Property) => ((p?.multi_select as { name: string }[] | u
 const peopleNames = (p?: Property) => ((p?.people as { name?: string }[] | undefined) ?? []).map((o) => o.name ?? "").filter(Boolean);
 const relationIds = (p?: Property) => ((p?.relation as { id: string }[] | undefined) ?? []).map((r) => r.id);
 const dateOf = (p?: Property) => p?.date as { start: string; end: string | null } | null | undefined;
+const numberOf = (p?: Property) => {
+  const value = (p?.type === "formula" ? (p.formula as { number?: number | null } | undefined)?.number : p?.number) as number | null | undefined;
+  return typeof value === "number" ? value : undefined;
+};
+// Find a property by part of its name, so a renamed column (e.g. "✅ 원화 금액") keeps working.
+const propLike = (p: Record<string, Property>, part: string) => Object.entries(p).find(([name]) => name.includes(part))?.[1];
 
 export function createNotion(env: NotionEnv) {
   const { NOTION_TOKEN: token } = env;
@@ -128,23 +135,52 @@ export function createNotion(env: NotionEnv) {
     done: p["달성"]?.checkbox === true,
   });
 
-  let goalsError: string | undefined;
+  const toPayment = ({ id, url, properties: p }: Page): Payment => ({
+    id,
+    url,
+    name: text(p["서비스"]) || "이름 없는 구독",
+    plan: text(p["요금제"]) || undefined,
+    users: multiNames(p["사용자"]),
+    cycle: selectName(p["결제주기"]),
+    date: dateOf(p["결제일"])?.start?.slice(0, 10),
+    currency: selectName(p["통화"]),
+    amount: numberOf(p["결제 금액"]),
+    krw: numberOf(propLike(p, "원화 금액")),
+    method: text(p["결제수단"]) || undefined,
+    status: selectName(p["상태"]),
+  });
 
   async function load(): Promise<Omit<NotionPart, "syncedAt">> {
-    const [tasks, contents, sales, goals] = await Promise.all([
+    // Optional DBs fail on their own: if one can't be read (e.g. the integration is not connected),
+    // only its card shows the error and the rest of Notion still loads.
+    const errors: Record<string, string> = {};
+    const optional = (database: string | undefined, label: string) =>
+      database
+        ? rows(database, label).catch((error: Error) => {
+            console.error(`[work] notion ${label}`, error);
+            errors[label] = error.message.slice(0, 160);
+            return undefined;
+          })
+        : Promise.resolve([]);
+
+    const [tasks, contents, sales, goals, payments] = await Promise.all([
       rows(env.NOTION_TASKS_DB!, "업무"),
       rows(env.NOTION_CONTENTS_DB!, "콘텐츠"),
       env.NOTION_SALES_DB ? rows(env.NOTION_SALES_DB, "영업") : Promise.resolve([]),
-      // The goals DB is optional: if it fails (e.g. the integration is not connected), only the goals card shows the error.
-      env.NOTION_GOALS_DB
-        ? rows(env.NOTION_GOALS_DB, "주간목표").catch((error: Error) => {
-            console.error("[work] notion goals", error);
-            goalsError = error.message.slice(0, 160);
-            return undefined;
-          })
-        : Promise.resolve([]),
+      optional(env.NOTION_GOALS_DB, "주간목표"),
+      // Without the setting the card says so, instead of looking like "no payments this month".
+      env.NOTION_PAYMENTS_DB ? optional(env.NOTION_PAYMENTS_DB, "결제") : Promise.resolve(undefined),
     ]);
-    return { tasks: tasks.map(toTask), contents: contents.map(toContent), sales: sales.map(toSales), goals: goals?.map(toGoal), goalsError };
+    if (!env.NOTION_PAYMENTS_DB) errors["결제"] = "설정 없음: NOTION_PAYMENTS_DB";
+    return {
+      tasks: tasks.map(toTask),
+      contents: contents.map(toContent),
+      sales: sales.map(toSales),
+      goals: goals?.map(toGoal),
+      goalsError: errors["주간목표"],
+      payments: payments?.map(toPayment),
+      paymentsError: errors["결제"],
+    };
   }
 
   return { load };
