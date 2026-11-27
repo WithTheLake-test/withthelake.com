@@ -6,6 +6,7 @@ import { outlineButton } from "@/components/Button";
 import FollowUps from "@/components/work/FollowUps";
 import GovProject from "@/components/work/GovProjects";
 import ImportantTimeline from "@/components/work/ImportantTimeline";
+import Payments from "@/components/work/Payments";
 import Sales from "@/components/work/Sales";
 import { Section, Unavailable, cardClass } from "@/components/work/ui";
 import WeeklyGoals from "@/components/work/WeeklyGoals";
@@ -210,13 +211,7 @@ export default function HomeView() {
             )}
           </div>
 
-          <div className={cardClass}>
-            <h3 className="mb-3 text-base font-bold">이번 달 결제 예정</h3>
-            <p className="flex justify-between">
-              <span>Google Workspace</span>
-              <span className="text-muted">[결제일] · [금액]</span>
-            </p>
-          </div>
+          <Payments payments={notion?.payments} error={notion ? notion.paymentsError : undefined} today={TODAY} />
         </div>
       </Section>
 
