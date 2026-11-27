@@ -1,12 +1,13 @@
 // Notion reader for the home and calendar screens (read-only; relative imports only).
 // API version 2026-03-11: a database has data sources, and rows are read with POST /v1/data_sources/{id}/query.
-import type { ContentItem, NotionPart, SalesItem, WorkTask } from "../lib/work/types";
+import type { ContentItem, NotionPart, SalesItem, WeeklyGoal, WorkTask } from "../lib/work/types";
 
 export interface NotionEnv {
   NOTION_TOKEN?: string;
   NOTION_TASKS_DB?: string;
   NOTION_CONTENTS_DB?: string;
   NOTION_SALES_DB?: string;
+  NOTION_GOALS_DB?: string;
 }
 
 const API = "https://api.notion.com/v1";
@@ -108,13 +109,23 @@ export function createNotion(env: NotionEnv) {
     owners: peopleNames(p["담당자"]),
   });
 
+  const toGoal = ({ id, url, properties: p }: Page): WeeklyGoal => ({
+    id,
+    url,
+    title: text(p["목표"]) || "제목 없는 목표",
+    week: dateOf(p["주"])?.start?.slice(0, 10),
+    assignees: multiNames(p["담당자"]),
+    done: p["달성"]?.checkbox === true,
+  });
+
   async function load(): Promise<Omit<NotionPart, "syncedAt">> {
-    const [tasks, contents, sales] = await Promise.all([
+    const [tasks, contents, sales, goals] = await Promise.all([
       rows(env.NOTION_TASKS_DB!),
       rows(env.NOTION_CONTENTS_DB!),
       env.NOTION_SALES_DB ? rows(env.NOTION_SALES_DB) : Promise.resolve([]),
+      env.NOTION_GOALS_DB ? rows(env.NOTION_GOALS_DB) : Promise.resolve([]),
     ]);
-    return { tasks: tasks.map(toTask), contents: contents.map(toContent), sales: sales.map(toSales) };
+    return { tasks: tasks.map(toTask), contents: contents.map(toContent), sales: sales.map(toSales), goals: goals.map(toGoal) };
   }
 
   return { load };

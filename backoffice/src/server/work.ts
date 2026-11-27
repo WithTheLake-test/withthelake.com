@@ -36,7 +36,7 @@ async function loadCalendars(env: WorkEnv): Promise<Omit<CalendarPart, "syncedAt
 
 export async function loadWorkFeed(env: WorkEnv, fresh: boolean) {
   const [notion, calendar] = await Promise.allSettled([
-    cached("notion-v1", NOTION_TTL, fresh, () => createNotion(env).load()),
+    cached("notion-v2", NOTION_TTL, fresh, () => createNotion(env).load()),
     cached("calendar-v1", CALENDAR_TTL, fresh, () => loadCalendars(env)),
   ]);
   if (notion.status === "rejected") console.error("[work] notion", notion.reason);
