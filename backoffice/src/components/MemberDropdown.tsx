@@ -8,8 +8,8 @@ import Dropdown from "./Dropdown";
 type Props = { value: string[]; onChange: (ids: string[]) => void; className?: string };
 
 export default function MemberDropdown({ value, onChange, className }: Props) {
-  const { user, members, memberOf } = useUser();
-  const nameOf = (id: string) => (id === user.id ? `${user.name} (나)` : memberOf(id)?.name ?? "");
+  const { me, members, memberOf } = useUser();
+  const nameOf = (id: string) => (id === me?.id ? `${me.name} (나)` : memberOf(id)?.name ?? "");
 
   let summary = "선택 없음";
   if (value.length === members.length) summary = `전체 (${members.length}명)`;
@@ -39,11 +39,12 @@ export default function MemberDropdown({ value, onChange, className }: Props) {
 }
 
 function MemberPicker({ initial, onApply }: { initial: string[]; onApply: (ids: string[]) => void }) {
-  const { user, members } = useUser();
+  const { me, members } = useUser();
   const [draft, setDraft] = useState(initial);
   const [query, setQuery] = useState("");
 
-  const ordered = [user, ...members.filter((member) => member.id !== user.id)];
+  // The chosen member comes first; when viewing everyone, the usual order.
+  const ordered = me ? [me, ...members.filter((member) => member.id !== me.id)] : members;
   const visible = ordered.filter((member) => member.name.includes(query.trim()));
   const toggle = (id: string) => setDraft((prev) => (prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]));
 
@@ -61,7 +62,7 @@ function MemberPicker({ initial, onApply }: { initial: string[]; onApply: (ids: 
           <li key={member.id} className="flex items-center gap-3 px-1 py-2">
             <Checkbox label={member.name} checked={draft.includes(member.id)} onChange={() => toggle(member.id)} />
             <button type="button" onClick={() => toggle(member.id)} className="flex-1 text-left">
-              {member.id === user.id ? `${member.name} (나)` : member.name}
+              {member.id === me?.id ? `${member.name} (나)` : member.name}
             </button>
             <span className="text-sm text-muted">{member.role}</span>
           </li>

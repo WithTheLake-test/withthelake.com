@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { HOMEPAGE_URL } from "@/lib/links";
 import { useReload } from "@/lib/store";
-import { useUser } from "@/lib/user";
+import { EVERYONE, useUser } from "@/lib/user";
 import { usesLiveFeed } from "@/lib/work/feed";
 import Avatar from "./Avatar";
 import { outlineButton } from "./Button";
@@ -38,19 +38,20 @@ const UPCOMING_MENU = "영업, 경영지원, 메일 공유, 설정";
 const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
 function UserSelect() {
-  const { user, members, setUser } = useUser();
+  const { me, members, setViewer } = useUser();
   return (
     <label className="relative flex h-[42px] items-center gap-2 rounded-lg border border-line bg-white px-3">
       <span className="text-muted">사용자</span>
-      <Avatar label={user.short} />
-      <span className="font-semibold">{user.name}</span>
+      {me && <Avatar label={me.short} />}
+      <span className="font-semibold">{me?.name ?? "전체"}</span>
       <span className="text-xs">▾</span>
       <select
         aria-label="사용자"
-        value={user.id}
-        onChange={(e) => setUser(e.target.value)}
+        value={me?.id ?? EVERYONE}
+        onChange={(e) => setViewer(e.target.value)}
         className="absolute inset-0 cursor-pointer opacity-0"
       >
+        <option value={EVERYONE}>전체</option>
         {members.map((member) => (
           <option key={member.id} value={member.id}>
             {member.name}

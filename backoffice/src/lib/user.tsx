@@ -3,9 +3,10 @@
 import { createContext, useContext, useSyncExternalStore, type ReactNode } from "react";
 import type { Member } from "./data/types";
 
-const STORAGE_KEY = "backoffice:user";
-// Until login exists, the team member below is the default current user.
-const DEFAULT_USER_ID = "jin";
+// A new key, so a member saved under the old key starts from "everyone" once.
+const STORAGE_KEY = "backoffice:viewer";
+const OLD_KEY = "backoffice:user";
+export const EVERYONE = "all";
 
 function subscribe(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -24,10 +25,15 @@ function readStored() {
   }
 }
 
+// What the screens are viewed for: the whole team, or one member.
+export type Viewer = { kind: "all" } | { kind: "member"; member: Member };
+
 type UserContextValue = {
-  user: Member;
+  viewer: Viewer;
+  // The chosen member; undefined when viewing everyone.
+  me?: Member;
   members: Member[];
-  setUser: (id: string) => void;
+  setViewer: (id: string) => void;
   memberOf: (id?: string) => Member | undefined;
 };
 
@@ -36,16 +42,18 @@ const UserContext = createContext<UserContextValue | null>(null);
 export function UserProvider({ members, children }: { members: Member[]; children: ReactNode }) {
   const storedId = useSyncExternalStore(subscribe, readStored, () => null);
   const memberOf = (id?: string) => members.find((member) => member.id === id);
-  const user = memberOf(storedId ?? DEFAULT_USER_ID) ?? memberOf(DEFAULT_USER_ID) ?? members[0];
+  const me = memberOf(storedId ?? undefined);
+  const viewer: Viewer = me ? { kind: "member", member: me } : { kind: "all" };
 
-  const setUser = (id: string) => {
+  const setViewer = (id: string) => {
     try {
       localStorage.setItem(STORAGE_KEY, id);
+      localStorage.removeItem(OLD_KEY);
     } catch {}
     window.dispatchEvent(new Event(STORAGE_KEY));
   };
 
-  return <UserContext value={{ user, members, setUser, memberOf }}>{children}</UserContext>;
+  return <UserContext value={{ viewer, me, members, setViewer, memberOf }}>{children}</UserContext>;
 }
 
 export function useUser() {
