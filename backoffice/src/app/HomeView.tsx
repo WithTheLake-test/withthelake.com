@@ -77,7 +77,8 @@ export default function HomeView() {
   const byId = new Map(allTasks.map((t) => [t.id, t]));
   // "전체" sees the whole team; a chosen member sees only their own tasks.
   const tasks = me ? allTasks.filter((t) => t.assignees.includes(me.name)) : allTasks;
-  const projectOf = (t: WorkTask) => (t.parentIds.map((id) => byId.get(id)?.title).find(Boolean) ?? t.category ?? "");
+  const parentOf = (t: WorkTask) => t.parentIds.map((id) => byId.get(id)?.title).find(Boolean);
+  const projectOf = (t: WorkTask) => parentOf(t) ?? t.category ?? "";
 
   const overdue = overdueTasks(tasks, TODAY);
   const soon = dueWithin(tasks, TODAY, 7);
@@ -137,7 +138,7 @@ export default function HomeView() {
       </Section>
 
       <Section title="2 · 2주 안 중요 일정" note="중요도 높음 · 마감 D-14~D-day">
-        {notion ? <ImportantTimeline tasks={importantSoon(tasks, TODAY)} parent={(t) => t.parentIds.map((id) => byId.get(id)?.title).find(Boolean)} category={(t) => t.category ?? ""} today={TODAY} /> : <Unavailable source="노션" />}
+        {notion ? <ImportantTimeline tasks={importantSoon(tasks, TODAY)} parent={parentOf} category={(t) => t.category ?? ""} today={TODAY} /> : <Unavailable source="노션" />}
       </Section>
 
       <Section title="3 · 이번 주 목표와 팔로업">
@@ -174,6 +175,7 @@ export default function HomeView() {
                   <span className="w-16 shrink-0 rounded-md border border-line px-2 py-0.5 text-center text-sm">{t.time ?? "종일"}</span>
                   <a href={t.url} target="_blank" rel="noopener noreferrer" className="truncate hover:underline">
                     {t.title}
+                    {parentOf(t) && <span className="ml-1.5 text-sm text-muted">· {parentOf(t)}</span>}
                   </a>
                 </li>
               ))}
