@@ -136,7 +136,7 @@ export default function HomeView() {
       </Section>
 
       <Section title="2 · 2주 안 중요 일정" note="중요도 높음 · 마감 D-14~D-day">
-        {notion ? <ImportantTimeline tasks={importantSoon(tasks, TODAY)} category={(t) => t.category ?? ""} today={TODAY} /> : <Unavailable source="노션" />}
+        {notion ? <ImportantTimeline tasks={importantSoon(tasks, TODAY)} parent={(t) => t.parentIds.map((id) => byId.get(id)?.title).find(Boolean)} category={(t) => t.category ?? ""} today={TODAY} /> : <Unavailable source="노션" />}
       </Section>
 
       <Section title="3 · 이번 주 목표와 팔로업">
