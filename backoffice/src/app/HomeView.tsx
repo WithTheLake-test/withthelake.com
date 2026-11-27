@@ -20,6 +20,7 @@ import {
   followUps,
   governmentProjects,
   importantSoon,
+  NO_OWNER,
   isPublished,
   needsPhoto,
   overdueTasks,
@@ -38,12 +39,24 @@ const SOURCE_STYLE: Record<CalendarEvent["source"], string> = {
   leave: "bg-soft text-muted",
 };
 
-function StatCard({ label, value, sub, href, alert = false }: { label: string; value: ReactNode; sub: ReactNode; href: string; alert?: boolean }) {
+type PersonCount = { name: string; count: number };
+
+function StatCard({ label, value, sub, href, alert = false, people }: { label: string; value: ReactNode; sub: ReactNode; href: string; alert?: boolean; people?: PersonCount[] }) {
   return (
     <Link href={href} className={`${cardClass} block hover:border-faint ${alert ? "border-red-200 bg-red-50" : ""}`}>
       <p className="font-semibold">{label}</p>
       <p className={`mt-2 text-[40px] leading-none font-bold ${alert ? "text-danger" : ""}`}>{value}</p>
       <p className={`mt-3 truncate text-sm ${alert ? "text-danger" : "text-muted"}`}>{sub}</p>
+      {people && (
+        <p className={`mt-2.5 flex flex-wrap gap-x-1.5 border-t pt-2.5 text-[13px] text-muted ${alert ? "border-red-200" : "border-line"}`}>
+          {people.map(({ name, count }, i) => (
+            <span key={name}>
+              {i > 0 && "· "}
+              {name} <b className={alert && count ? "text-danger" : "text-ink"}>{count}</b>
+            </span>
+          ))}
+        </p>
+      )}
     </Link>
   );
 }
@@ -51,9 +64,9 @@ function StatCard({ label, value, sub, href, alert = false }: { label: string; v
 const truncate = (text: string, max = 10) => (text.length > max ? `${text.slice(0, max)}…` : text);
 
 export default function HomeView() {
-  const { user } = useUser();
+  const { me, members } = useUser();
   const { feed } = useWorkFeed();
-  const team = user.role === "대표";
+  const team = !me;
 
   if (!feed) return <p className="py-20 text-center text-muted">노션·구글 캘린더를 불러오는 중</p>;
 
@@ -61,8 +74,8 @@ export default function HomeView() {
   const events = feed.calendar?.events ?? [];
   const allTasks = (notion?.tasks ?? []).filter(visible);
   const byId = new Map(allTasks.map((t) => [t.id, t]));
-  // The CEO sees the whole team; everyone else sees their own tasks.
-  const tasks = team ? allTasks : allTasks.filter((t) => t.assignees.includes(user.name));
+  // "전체" sees the whole team; a chosen member sees only their own tasks.
+  const tasks = me ? allTasks.filter((t) => t.assignees.includes(me.name)) : allTasks;
   const projectOf = (t: WorkTask) => (t.parentIds.map((id) => byId.get(id)?.title).find(Boolean) ?? t.category ?? "");
 
   const overdue = overdueTasks(tasks, TODAY);
@@ -76,6 +89,13 @@ export default function HomeView() {
   const blocked = blockedContents(contents, TODAY);
   const weekContents = contents.filter((c) => !isPublished(c) && c.date && c.date >= startOfWeek(TODAY) && c.date <= endOfWeek(TODAY));
   const gov = governmentProjects(allTasks);
+  // Per-person counts under the cards when viewing everyone; a shared task counts for each assignee.
+  const perPerson = (list: WorkTask[]): PersonCount[] | undefined => {
+    if (!team || !notion) return undefined;
+    const counts = members.map((m) => ({ name: m.name, count: list.filter((t) => t.assignees.includes(m.name)).length }));
+    const noOwner = list.filter((t) => t.assignees.length === 0).length;
+    return noOwner ? [...counts, { name: NO_OWNER, count: noOwner }] : counts;
+  };
 
   return (
     <>
@@ -83,7 +103,7 @@ export default function HomeView() {
         <h1 className="text-[26px] font-bold">
           {monthDay(TODAY)} {weekday(TODAY)}요일
         </h1>
-        <p className="mt-1.5 text-base text-muted">{team ? "대표님 · 팀 전체 기준" : `${user.name} 님 업무 기준`}</p>
+        <p className="mt-1.5 text-base text-muted">{me ? `${me.name} 님 업무 기준` : "팀 전체 기준"}</p>
       </div>
 
       <Section title="1 · 오늘 상태" note="숫자를 누르면 해당 화면으로 이동합니다">
@@ -96,12 +116,14 @@ export default function HomeView() {
             sub={overdue[0] ? `가장 오래: ${truncate(overdue[0].task.title)} ${overdue[0].days}일` : "없음"}
             href="/progress"
             alert={overdue.length > 0}
+            people={perPerson(overdue.map((o) => o.task))}
           />
           <StatCard
             label="7일 안 마감"
             value={notion ? soon.length : "–"}
             sub={busiest && busiest[1] > 1 ? `${Number(busiest[0].slice(8))}일(${weekday(busiest[0])})에 ${busiest[1]}건 몰림` : soon[0] ? `${monthDay(dueOf(soon[0])!)} ${truncate(soon[0].title)}` : "없음"}
             href="/calendar"
+            people={perPerson(soon)}
           />
           <StatCard
             label="오늘 일정"
@@ -119,9 +141,9 @@ export default function HomeView() {
 
       <Section title="3 · 이번 주 목표와 팔로업">
         <div className="grid grid-cols-2 items-start gap-4">
-          <WeeklyGoals today={TODAY} me={user.name} />
+          <WeeklyGoals today={TODAY} me={me?.name} />
           {notion ? (
-            <FollowUps groups={followUps(overdue).filter((g) => team || g.name === user.name)} project={(o: Overdue) => (o.stale ? "프로젝트 · 마감일 없음" : projectOf(o.task))} />
+            <FollowUps groups={followUps(overdue).filter((g) => !me || g.name === me.name)} project={(o: Overdue) => (o.stale ? "프로젝트 · 마감일 없음" : projectOf(o.task))} />
           ) : (
             <Unavailable source="노션" />
           )}

@@ -16,14 +16,14 @@ const EXAMPLE: Goal[] = [
 
 const short = (day: string) => `${Number(day.slice(5, 7))}/${Number(day.slice(8))}`;
 
-export default function WeeklyGoals({ today, me }: { today: string; me: string }) {
+export default function WeeklyGoals({ today, me }: { today: string; me?: string }) {
   const [goals, setGoals] = useState(EXAMPLE);
   const [draft, setDraft] = useState("");
   const done = goals.filter((g) => g.done).length;
 
   const add = () => {
     if (!draft.trim()) return;
-    setGoals((prev) => [...prev, { id: Date.now(), title: draft.trim(), owners: me, done: false }]);
+    setGoals((prev) => [...prev, { id: Date.now(), title: draft.trim(), owners: me ?? "", done: false }]);
     setDraft("");
   };
 
@@ -49,7 +49,7 @@ export default function WeeklyGoals({ today, me }: { today: string; me: string }
             <Checkbox label={g.title} checked={g.done} onChange={() => setGoals((prev) => prev.map((x) => (x.id === g.id ? { ...x, done: !x.done } : x)))} />
             <div>
               <p className={g.done ? "text-faint line-through" : ""}>{g.title}</p>
-              <p className="text-sm text-muted">{g.owners}</p>
+              {g.owners && <p className="text-sm text-muted">{g.owners}</p>}
             </div>
           </li>
         ))}
